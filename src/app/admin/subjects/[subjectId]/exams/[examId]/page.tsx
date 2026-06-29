@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { exams } from "@/data/mock/exams";
-import { sampleQuestions } from "@/data/mock/questions";
-import { subjects } from "@/data/mock/subjects";
+import { getAdminSessionOrRedirect } from "@/lib/auth-server";
+import { examTypeToCode } from "@/modules/subjects/mappers";
+import { examService } from "@/services/exam.service";
 import { Database, Edit, Plus, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,12 +12,15 @@ export default async function ExamDetailPage({
 }: {
   params: Promise<{ subjectId: string; examId: string }>;
 }) {
+  await getAdminSessionOrRedirect();
   const { subjectId, examId } = await params;
-  const subject = subjects.find((s) => s.id === Number(subjectId));
-  const exam = exams.find((e) => e.id === Number(examId));
-  if (!subject || !exam) notFound();
+  const exam = await examService.getById(examId);
 
-  const questions = sampleQuestions.filter((q) => q.examId === exam.id);
+  if (!exam || exam.subjectId !== subjectId) notFound();
+
+  const subject = exam.subject;
+  const typeCode = examTypeToCode(exam.type);
+  const questions = exam.questions;
 
   return (
     <>
@@ -33,16 +36,16 @@ export default async function ExamDetailPage({
           <div className="mb-3.5 rounded-xl border border-exam-border bg-exam-white p-4.5">
             <div className="mb-3 flex items-center justify-between text-[13px] font-bold text-exam-text">
               Exam Details
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" disabled title="Exam CRUD coming next">
                 <Edit size={12} />
               </Button>
             </div>
             {[
-              { label: "Subject", value: exam.subCode },
-              { label: "Type", value: <Badge status={exam.type} /> },
-              { label: "Duration", value: `${exam.dur} min` },
-              { label: "Pass Mark", value: `${exam.pass}%` },
-              { label: "Questions", value: `${exam.qCount}` },
+              { label: "Subject", value: subject.code },
+              { label: "Type", value: <Badge status={typeCode} /> },
+              { label: "Duration", value: `${exam.durationMinutes} min` },
+              { label: "Pass Mark", value: `${exam.passMark}%` },
+              { label: "Questions", value: `${exam._count.questions}` },
               { label: "Status", value: <Badge status={exam.status} /> },
             ].map((row) => (
               <div
@@ -60,13 +63,13 @@ export default async function ExamDetailPage({
           <div className="rounded-xl border border-exam-border bg-exam-white p-4.5">
             <div className="mb-2.5 flex items-center justify-between text-[13px] font-bold text-exam-text">
               Instructions
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" disabled title="Exam CRUD coming next">
                 <Edit size={12} />
               </Button>
             </div>
             <div className="rounded-lg border border-[#FDDEA0] bg-gold-light p-3.5">
               <p className="m-0 whitespace-pre-line text-xs leading-relaxed text-amber-800">
-                {exam.instructions}
+                {exam.instructions ?? "No instructions set."}
               </p>
             </div>
             <p className="mt-2 text-[11px] text-exam-muted">
@@ -81,10 +84,10 @@ export default async function ExamDetailPage({
               Question Bank ({questions.length})
             </span>
             <div className="flex gap-1.5">
-              <Button variant="primary" size="sm">
+              <Button variant="primary" size="sm" disabled title="Question CRUD coming next">
                 <Upload size={12} /> Upload CSV
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" disabled title="Question CRUD coming next">
                 <Plus size={12} /> Add Manual
               </Button>
             </div>
@@ -98,39 +101,45 @@ export default async function ExamDetailPage({
               </div>
             </div>
           ) : (
-            questions.map((q, i) => (
-              <div
-                key={q.id}
-                className="flex items-start gap-2.5 border-b border-exam-border py-2.5 last:border-0"
-              >
+            questions.map((question, index) => {
+              const questionType =
+                question.type === "OBJECTIVE" ? "obj" : "theory";
+
+              return (
                 <div
-                  className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${
-                    q.type === "obj"
-                      ? "bg-sky-50 text-sky-800"
-                      : "bg-purple-50 text-purple-800"
-                  }`}
+                  key={question.id}
+                  className="flex items-start gap-2.5 border-b border-exam-border py-2.5 last:border-0"
                 >
-                  {i + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="mb-1 text-xs leading-relaxed text-exam-text">
-                    {q.q}
+                  <div
+                    className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${
+                      questionType === "obj"
+                        ? "bg-sky-50 text-sky-800"
+                        : "bg-purple-50 text-purple-800"
+                    }`}
+                  >
+                    {index + 1}
                   </div>
-                  <div className="flex gap-2">
-                    <Badge status={q.type === "obj" ? "obj" : "theory"} />
-                    <span className="text-[11px] text-exam-muted">
-                      {q.marks} marks
-                    </span>
+                  <div className="flex-1">
+                    <div className="mb-1 text-xs leading-relaxed text-exam-text">
+                      {question.text}
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge status={questionType} />
+                      <span className="text-[11px] text-exam-muted">
+                        {question.marks} marks
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    className="cursor-not-allowed p-1 text-exam-muted"
+                    disabled
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="cursor-pointer p-1 text-exam-muted"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
