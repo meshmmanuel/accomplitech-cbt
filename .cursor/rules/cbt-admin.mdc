@@ -1,0 +1,15 @@
+---
+description: Admin portal rules
+globs: src/app/admin/**/*,src/components/admin/**/*
+alwaysApply: false
+---
+
+# Admin Portal
+
+- Admin sidebar: Overview, Subjects & Exams, Sessions, Monitor, Results, Reports, Settings.
+- Layout: fixed dark navy sidebar (220px), gold primary actions.
+- Subjects hierarchy: Subject → Exam → Question Bank (3-level drill-down).
+- Sessions can combine exams from multiple subjects; each session has a unique `examCode`.
+- Exam instructions textarea shown to students as popup before exam.
+- Admin login at `/admin/login`; dashboard at `/admin/*`.
+- Student Management tab deferred for V1.

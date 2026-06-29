@@ -1,0 +1,95 @@
+export const exams = [
+  {
+    id: 1,
+    subId: 1,
+    subCode: "CS101",
+    name: "Mid-Term Assessment",
+    type: "both" as const,
+    dur: 90,
+    pass: 50,
+    instructions:
+      "1. Read all questions carefully.\n2. Write legibly in your answer booklet for theory.\n3. No programmable calculators.\n4. Mobile phones must be off.",
+    qCount: 10,
+    status: "active" as const,
+  },
+  {
+    id: 2,
+    subId: 1,
+    subCode: "CS101",
+    name: "End of Semester Exam",
+    type: "obj" as const,
+    dur: 60,
+    pass: 45,
+    instructions:
+      "1. All 40 questions are compulsory.\n2. Shade your answer sheet with pencil.\n3. Each question carries 2.5 marks.",
+    qCount: 40,
+    status: "draft" as const,
+  },
+  {
+    id: 3,
+    subId: 1,
+    subCode: "CS101",
+    name: "Resit Exam",
+    type: "theory" as const,
+    dur: 120,
+    pass: 40,
+    instructions:
+      "1. Answer any 3 of the 5 questions.\n2. All questions carry equal marks.\n3. Show all workings.",
+    qCount: 5,
+    status: "draft" as const,
+  },
+  {
+    id: 4,
+    subId: 2,
+    subCode: "MTH301",
+    name: "Calculus Assessment",
+    type: "obj" as const,
+    dur: 45,
+    pass: 50,
+    instructions:
+      "1. Use the OMR answer sheet provided.\n2. Calculators are NOT allowed.",
+    qCount: 20,
+    status: "active" as const,
+  },
+  {
+    id: 5,
+    subId: 2,
+    subCode: "MTH301",
+    name: "Final Examination",
+    type: "both" as const,
+    dur: 180,
+    pass: 50,
+    instructions:
+      "1. Show all working for full marks.\n2. Scientific calculators allowed.\n3. Write matric number on every page.",
+    qCount: 15,
+    status: "draft" as const,
+  },
+  {
+    id: 6,
+    subId: 3,
+    subCode: "ENG201",
+    name: "Proficiency Test",
+    type: "theory" as const,
+    dur: 60,
+    pass: 60,
+    instructions:
+      "1. Answer in clear, coherent paragraphs.\n2. Grammar and spelling will be assessed.\n3. Minimum 150 words per essay.",
+    qCount: 3,
+    status: "active" as const,
+  },
+  {
+    id: 7,
+    subId: 4,
+    subCode: "PHY101",
+    name: "Practical Theory Paper",
+    type: "both" as const,
+    dur: 90,
+    pass: 50,
+    instructions:
+      "1. Show all workings with SI units.\n2. Formulae sheet provided on page 2.",
+    qCount: 12,
+    status: "draft" as const,
+  },
+] as const;
+
+export type Exam = (typeof exams)[number];

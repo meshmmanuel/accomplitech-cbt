@@ -1,0 +1,17 @@
+---
+description: ExamLink CBT UI and design system rules
+globs: src/components/**/*,src/app/**/*
+alwaysApply: true
+---
+
+# ExamLink UI
+
+- Follow ExamLink design tokens: navy `#1A2B5E`, gold `#F0A500`, surface `#F1F4FB`.
+- Use Tailwind CSS utility classes — never inline `style={{}}` in production code.
+- Use Lucide React icons exclusively.
+- Reuse shared components from `src/components/ui/`: Badge, Button, Input, Modal, Avatar, SectionHead.
+- Brand name is **ExamLink CBT**.
+- Use Inter font via `next/font/google`.
+- Every list/table needs loading skeleton, empty state, and error state (when wired to API).
+- Status badges must match prototype color mapping via `Badge` component.
+- Modals for all create/edit/import flows.

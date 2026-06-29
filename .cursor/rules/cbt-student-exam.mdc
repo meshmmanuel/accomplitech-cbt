@@ -1,0 +1,16 @@
+---
+description: Student exam flow rules
+globs: src/app/student/**/*,src/app/exam/**/*,src/components/student/**/*
+alwaysApply: false
+---
+
+# Student Exam Flow
+
+- Student auth: **Admission Number + Exam Code** — no pre-registered roster for V1.
+- Valid exam code maps to an active/open session.
+- Pre-exam flow: Session Instructions → Exam Instructions → Begin Exam.
+- Theory questions: never render text input — show booklet message with clipboard icon.
+- Objective: A–D with immediate selection highlight (navy border/background).
+- Flagged questions: amber in navigator.
+- Submit: confirmation modal with unanswered count before final submit.
+- Routes: `/student/login`, `/exam/[attemptId]`, `/exam/success`.

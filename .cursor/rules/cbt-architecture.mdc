@@ -1,0 +1,14 @@
+---
+description: ExamLink CBT architecture conventions
+globs: src/**/*
+alwaysApply: true
+---
+
+# CBT Architecture
+
+- Single Next.js codebase inside Electron — no separate backend project.
+- Business logic in `src/services/`, data access in `src/repositories/`, thin API handlers in `src/app/api/`.
+- SQLite via Prisma for V1; schema must remain PostgreSQL-migration-compatible.
+- Server is source of truth for exam timers, submission, and grading.
+- Use `src/lib/db.ts` Prisma singleton — never instantiate PrismaClient elsewhere.
+- Domain types and constants live in `src/modules/`; mock data in `src/data/mock/` until Phase 2.

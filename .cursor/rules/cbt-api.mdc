@@ -1,0 +1,14 @@
+---
+description: API route conventions
+globs: src/app/api/**/*
+alwaysApply: false
+---
+
+# CBT API
+
+- Validate all inputs with Zod.
+- Return consistent JSON: `{ data }` or `{ error, message }`.
+- Never put business logic in route handlers — delegate to `src/services/`.
+- Hash passwords with bcrypt — never store plain text.
+- Student exam code validation happens server-side in session service.
+- Use repository layer for all Prisma queries.

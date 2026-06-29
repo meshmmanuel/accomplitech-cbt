@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Switch provider to "postgresql" when using PostgreSQL DATABASE_URL
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  EXAM_OFFICER
+  LECTURER
+  INVIGILATOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ExamType {
+  OBJECTIVE
+  THEORY
+  BOTH
+}
+
+enum QuestionType {
+  OBJECTIVE
+  THEORY
+}
+
+enum SessionStatus {
+  DRAFT
+  UPCOMING
+  OPEN
+  CLOSED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  logoPath  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  subjects  Subject[]
+  sessions  ExamSession[]
+}
+
+model User {
+  id           String     @id @default(cuid())
+  institutionId String
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         UserRole   @default(EXAM_OFFICER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  institution  Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  auditLogs    AuditLog[]
+}
+
+model Subject {
+  id            String   @id @default(cuid())
+  institutionId String
+  code          String
+  name          String
+  department    String?
+  description   String?
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  exams         Exam[]
+
+  @@unique([institutionId, code])
+}
+
+model Exam {
+  id                        String   @id @default(cuid())
+  subjectId                 String
+  name                      String
+  type                      ExamType
+  durationMinutes           Int
+  passMark                  Int
+  totalMarks                Int      @default(100)
+  randomizeQuestions        Boolean  @default(false)
+  randomizeOptions          Boolean  @default(false)
+  showResultsAfterSubmission Boolean  @default(true)
+  negativeMarking           Boolean  @default(false)
+  instructions              String?
+  status                    String   @default("draft")
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  subject                   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions                 Question[]
+  sessionExams              ExamSessionExam[]
+  attempts                  ExamAttempt[]
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  examId        String
+  type          QuestionType
+  text          String
+  imagePath     String?
+  marks         Int          @default(1)
+  topic         String?
+  difficulty    String?
+  options       Json?
+  correctAnswer String?
+  explanation   String?
+  tags          String?
+  status        String       @default("active")
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers       ExamAnswer[]
+}
+
+model ExamSession {
+  id            String        @id @default(cuid())
+  institutionId String
+  name          String
+  date          DateTime
+  startTime     String?
+  endTime       String?
+  durationMinutes Int
+  instructions  String?
+  examCode      String        @unique
+  status        SessionStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  sessionExams  ExamSessionExam[]
+  attempts      ExamAttempt[]
+}
+
+model ExamSessionExam {
+  id        String      @id @default(cuid())
+  sessionId String
+  examId    String
+  session   ExamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exam      Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, examId])
+}
+
+model ExamAttempt {
+  id              String        @id @default(cuid())
+  sessionId       String
+  examId          String
+  admissionNumber String
+  displayName     String?
+  startedAt       DateTime      @default(now())
+  submittedAt     DateTime?
+  timeSpentSeconds Int?
+  score           Float?
+  status          AttemptStatus @default(IN_PROGRESS)
+  session         ExamSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exam            Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers         ExamAnswer[]
+
+  @@index([admissionNumber])
+}
+
+model ExamAnswer {
+  id               String      @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOption   String?
+  flaggedForReview Boolean     @default(false)
+  answeredAt       DateTime?
+  attempt          ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question         Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
