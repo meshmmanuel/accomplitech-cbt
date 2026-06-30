@@ -3,23 +3,33 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiPost } from "@/lib/api-client";
+import { getServerUrl, setServerUrl, setStudentClientContext } from "@/lib/client-storage";
 import type { StudentLoginResult } from "@/modules/auth/types";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { AlertCircle, ChevronLeft, Monitor } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { AlertCircle, Monitor } from "lucide-react";
 
 export default function StudentLoginPage() {
   const router = useRouter();
   const [admissionNumber, setAdmissionNumber] = useState("");
   const [examCode, setExamCode] = useState("");
+  const [serverUrl, setServerUrlState] = useState("");
+  const [showServerConfig, setShowServerConfig] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setServerUrlState(getServerUrl());
+  }, []);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
     setLoading(true);
+
+    if (serverUrl.trim()) {
+      setServerUrl(serverUrl.trim());
+    }
 
     const result = await apiPost<StudentLoginResult>(
       "/api/auth/student/login",
@@ -32,6 +42,11 @@ export default function StudentLoginPage() {
       setError(result.error ?? result.message ?? "Login failed");
       return;
     }
+
+    setStudentClientContext({
+      admissionNumber: result.data.admissionNumber,
+      sessionId: result.data.session.id,
+    });
 
     router.push(`/session/${result.data.session.id}/instructions`);
     router.refresh();
@@ -73,6 +88,22 @@ export default function StudentLoginPage() {
             autoComplete="off"
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowServerConfig((open) => !open)}
+            className="mb-3 text-left text-xs font-medium text-navy hover:underline"
+          >
+            {showServerConfig ? "Hide server settings" : "Server settings (LAN)"}
+          </button>
+          {showServerConfig && (
+            <Input
+              label="Server URL"
+              value={serverUrl}
+              onChange={(e) => setServerUrlState(e.target.value)}
+              placeholder="http://192.168.1.50:3000"
+              autoComplete="off"
+            />
+          )}
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-2.5 text-[13px] text-exam-red">
               <AlertCircle size={14} />
@@ -87,13 +118,6 @@ export default function StudentLoginPage() {
             {loading ? "Verifying..." : "Enter Exam"}
           </Button>
         </form>
-
-        <Link
-          href="/"
-          className="mx-auto mt-5 flex w-fit items-center gap-1.5 text-[13px] text-exam-muted hover:text-exam-text"
-        >
-          <ChevronLeft size={14} /> Back to home
-        </Link>
       </div>
     </div>
   );

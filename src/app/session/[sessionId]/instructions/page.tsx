@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation";
+import { SessionBeginButton } from "@/components/student/session-begin-button";
 import { Button } from "@/components/ui/button";
 import { getStudentSessionOrRedirect } from "@/lib/auth-server";
 import { sessionService } from "@/services/session.service";
 import { ClipboardList, Monitor } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function SessionInstructionsPage({
   params,
@@ -21,8 +22,6 @@ export default async function SessionInstructionsPage({
   if (!session) {
     redirect("/student/login");
   }
-
-  const firstExam = session.sessionExams[0]?.exam;
 
   return (
     <div className="min-h-screen bg-surface">
@@ -60,6 +59,13 @@ export default async function SessionInstructionsPage({
           <h2 className="m-0 mb-3 text-sm font-bold text-exam-text">
             Exams in this session
           </h2>
+          <p className="mb-3 text-xs text-exam-muted">
+            You have {session.durationMinutes} minutes total for{" "}
+            {session.sessionExams.length === 1
+              ? "this exam"
+              : `all ${session.sessionExams.length} exams`}
+            . The timer starts when you begin.
+          </p>
           <ul className="m-0 space-y-2 p-0">
             {session.sessionExams.map(({ exam }) => (
               <li
@@ -71,7 +77,7 @@ export default async function SessionInstructionsPage({
                   {" · "}
                   {exam.name}
                 </span>
-                <span className="text-exam-muted">{exam.durationMinutes} min</span>
+                <span className="text-exam-muted">{exam.questions.length} Q</span>
               </li>
             ))}
           </ul>
@@ -83,14 +89,12 @@ export default async function SessionInstructionsPage({
               Back
             </Button>
           </Link>
-          <Link
-            href={firstExam ? `/exam/demo` : "/student/login"}
-            className="flex-1"
-          >
-            <Button variant="navy" className="w-full justify-center">
-              Continue to Exam
-            </Button>
-          </Link>
+          <div className="flex-1">
+            <SessionBeginButton
+              sessionId={sessionId}
+              examCount={session.sessionExams.length}
+            />
+          </div>
         </div>
       </main>
     </div>

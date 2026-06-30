@@ -4,13 +4,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SectionHead } from "@/components/ui/section-head";
 import { cn } from "@/lib/utils";
-import type { Question } from "@/data/mock/questions";
+import { formatDuration } from "@/lib/utils";
+import { Clock, Monitor } from "lucide-react";
+
+export interface NavigatorQuestion {
+  id: string;
+  legacyType: "obj" | "theory";
+}
 
 interface QuestionNavigatorProps {
-  questions: readonly Question[];
+  questions: NavigatorQuestion[];
   current: number;
-  answers: Record<number, number>;
-  flagged: Set<number>;
+  answers: Record<string, string | null | undefined>;
+  flagged: Set<string>;
   onSelect: (index: number) => void;
 }
 
@@ -21,14 +27,14 @@ export function QuestionNavigator({
   flagged,
   onSelect,
 }: QuestionNavigatorProps) {
-  const objQs = questions.filter((q) => q.type === "obj");
-  const thQs = questions.filter((q) => q.type === "theory");
+  const objQs = questions.filter((q) => q.legacyType === "obj");
+  const thQs = questions.filter((q) => q.legacyType === "theory");
 
-  const getStyle = (index: number) => {
+  const getStyle = (index: number, question: NavigatorQuestion) => {
     if (index === current) return "bg-navy text-exam-white";
-    if (flagged.has(index))
+    if (flagged.has(question.id))
       return "border border-exam-amber bg-amber-50 text-exam-amber";
-    if (answers[index] !== undefined || questions[index].type === "theory")
+    if (answers[question.id] || question.legacyType === "theory")
       return "bg-emerald-50 text-emerald-800";
     return "border border-exam-border bg-exam-white text-exam-muted";
   };
@@ -38,14 +44,14 @@ export function QuestionNavigator({
       <SectionHead>Objective ({objQs.length})</SectionHead>
       <div className="mb-4 flex flex-wrap gap-1.5">
         {questions.map((q, i) =>
-          q.type === "obj" ? (
+          q.legacyType === "obj" ? (
             <button
               key={q.id}
               type="button"
               onClick={() => onSelect(i)}
               className={cn(
                 "h-[34px] w-[34px] cursor-pointer rounded-md border-0 text-xs font-bold",
-                getStyle(i),
+                getStyle(i, q),
               )}
             >
               {i + 1}
@@ -56,14 +62,14 @@ export function QuestionNavigator({
       <SectionHead>Theory ({thQs.length})</SectionHead>
       <div className="mb-4 flex flex-wrap gap-1.5">
         {questions.map((q, i) =>
-          q.type === "theory" ? (
+          q.legacyType === "theory" ? (
             <button
               key={q.id}
               type="button"
               onClick={() => onSelect(i)}
               className={cn(
                 "h-[34px] w-[34px] cursor-pointer rounded-md border-0 text-xs font-bold",
-                getStyle(i),
+                getStyle(i, q),
               )}
             >
               {i + 1}
@@ -84,6 +90,141 @@ export function QuestionNavigator({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+interface SessionTimerProps {
+  timeRemainingSeconds: number;
+}
+
+export function SessionTimerBar({ timeRemainingSeconds }: SessionTimerProps) {
+  const timerColor =
+    timeRemainingSeconds > 600
+      ? "text-navy"
+      : timeRemainingSeconds > 180
+        ? "text-exam-amber"
+        : "text-exam-red";
+
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-[10px] px-3.5 py-2 ${
+        timeRemainingSeconds <= 180
+          ? "border border-exam-red bg-red-500/15"
+          : "border border-white/15 bg-white/8"
+      }`}
+    >
+      <Clock size={15} className={timerColor} />
+      <span
+        className={`text-xl font-extrabold tabular-nums tracking-wide ${timerColor}`}
+      >
+        {formatDuration(timeRemainingSeconds)}
+      </span>
+    </div>
+  );
+}
+
+interface SessionHubPanelProps {
+  sessionName: string;
+  admissionNumber: string;
+  timeRemainingSeconds: number;
+  exams: Array<{
+    id: string;
+    name: string;
+    subjectCode: string;
+    subjectName: string;
+    attemptStatus: string;
+    questionCount: number;
+    attemptId: string | null;
+  }>;
+  loadingExamId: string | null;
+  onOpenExam: (examId: string) => void;
+}
+
+export function SessionHubPanel({
+  sessionName,
+  admissionNumber,
+  timeRemainingSeconds,
+  exams,
+  loadingExamId,
+  onOpenExam,
+}: SessionHubPanelProps) {
+  return (
+    <div className="min-h-screen bg-surface">
+      <header className="flex items-center justify-between bg-navy px-6 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold">
+            <Monitor size={16} className="text-navy-dark" />
+          </div>
+          <div>
+            <span className="text-sm font-bold text-exam-white">{sessionName}</span>
+            <p className="m-0 text-[11px] text-[#8899CC]">Session timer is running</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <SessionTimerBar timeRemainingSeconds={timeRemainingSeconds} />
+          <span className="text-xs text-[#8899CC]">{admissionNumber}</span>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-2xl px-6 py-10">
+        <h1 className="mb-2 text-xl font-extrabold text-exam-text">Your exams</h1>
+        <p className="mb-6 text-sm text-exam-muted">
+          One timer for all papers. Open any exam in any order. Submit each paper when
+          you are done.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          {exams.map((exam) => (
+            <div
+              key={exam.id}
+              className="flex items-center justify-between rounded-xl border border-exam-border bg-exam-white p-4"
+            >
+              <div>
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="font-bold text-navy">{exam.subjectName}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-exam-muted">
+                    {exam.subjectCode}
+                  </span>
+                  <Badge
+                    status={
+                      exam.attemptStatus === "submitted"
+                        ? "submitted"
+                        : exam.attemptStatus === "in_progress"
+                          ? "active"
+                          : "idle"
+                    }
+                  />
+                </div>
+                <p className="m-0 text-sm text-exam-text">{exam.name}</p>
+                <p className="m-0 mt-1 text-xs text-exam-muted">
+                  {exam.questionCount} questions
+                </p>
+              </div>
+              <Button
+                variant={
+                  exam.attemptStatus === "submitted" ? "ghost" : "primary"
+                }
+                size="sm"
+                disabled={
+                  loadingExamId === exam.id ||
+                  exam.attemptStatus === "submitted" ||
+                  timeRemainingSeconds <= 0
+                }
+                onClick={() => onOpenExam(exam.id)}
+              >
+                {loadingExamId === exam.id
+                  ? "Opening..."
+                  : exam.attemptStatus === "submitted"
+                    ? "Submitted"
+                    : exam.attemptStatus === "in_progress"
+                      ? "Continue"
+                      : "Start"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }

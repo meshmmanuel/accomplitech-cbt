@@ -13,6 +13,7 @@ interface SubmitModalProps {
   timeLeft: number;
   onClose: () => void;
   onSubmit: () => void;
+  submitting?: boolean;
 }
 
 export function SubmitModal({
@@ -23,6 +24,7 @@ export function SubmitModal({
   timeLeft,
   onClose,
   onSubmit,
+  submitting = false,
 }: SubmitModalProps) {
   const unanswered = objTotal - answered;
 
@@ -75,9 +77,10 @@ export function SubmitModal({
         <Button
           variant="primary"
           className="flex-1 justify-center"
+          disabled={submitting}
           onClick={onSubmit}
         >
-          Submit Now
+          {submitting ? "Submitting..." : "Submit Now"}
         </Button>
       </div>
     </Modal>

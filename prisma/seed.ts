@@ -7,6 +7,7 @@ import {
   UserRole,
 } from "@prisma/client";
 import { createPrismaClient } from "../src/lib/db";
+import { canonicalToDbFields, textBlock } from "../src/modules/questions";
 import { SEED_CREDENTIALS, SEED_IDS } from "./seed-ids";
 
 const prisma = createPrismaClient();
@@ -284,20 +285,38 @@ async function main() {
   ];
 
   for (const [index, question] of midTermQuestions.entries()) {
+    const canonical =
+      question.type === "obj"
+        ? {
+            questionType: "multiple_choice" as const,
+            marks: question.marks,
+            blocks: [textBlock(question.text)],
+            options: question.options.map((value, optionIndex) => ({
+              id: ANSWER_LETTERS[optionIndex],
+              blocks: [textBlock(value)],
+            })),
+            answer: {
+              kind: "single" as const,
+              value: ANSWER_LETTERS[question.correctIndex],
+            },
+          }
+        : {
+            questionType: "essay" as const,
+            marks: question.marks,
+            blocks: [textBlock(question.text)],
+            answer: { kind: "essay" as const, value: null },
+          };
+
+    const { examId, ...fields } = canonicalToDbFields(
+      canonical,
+      SEED_IDS.exams.cs101MidTerm,
+      index,
+    );
+
     await prisma.question.create({
       data: {
-        examId: SEED_IDS.exams.cs101MidTerm,
-        type:
-          question.type === "obj" ? QuestionType.OBJECTIVE : QuestionType.THEORY,
-        text: question.text,
-        marks: question.marks,
-        sortOrder: index,
-        options:
-          question.type === "obj" ? question.options : undefined,
-        correctAnswer:
-          question.type === "obj"
-            ? ANSWER_LETTERS[question.correctIndex]
-            : undefined,
+        examId,
+        ...fields,
       },
     });
   }

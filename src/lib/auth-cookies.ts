@@ -32,6 +32,11 @@ export async function setStudentAuthCookie(accessToken: string) {
   });
 }
 
+export async function clearStudentAuthCookie() {
+  const jar = await cookies();
+  jar.delete(AUTH_COOKIE.studentAccess);
+}
+
 export async function clearAuthCookies() {
   const jar = await cookies();
   jar.delete(AUTH_COOKIE.adminAccess);

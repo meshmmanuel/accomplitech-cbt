@@ -1,4 +1,5 @@
 import { SubjectDetailActions } from "@/components/admin/subject-detail-actions";
+import { SubjectExamsToolbar } from "@/components/admin/subject-exams-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAdminSessionOrRedirect } from "@/lib/auth-server";
@@ -8,8 +9,6 @@ import {
   Clock,
   Eye,
   FileText,
-  Plus,
-  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -55,14 +54,7 @@ export default async function SubjectExamsPage({
 
       <SubjectDetailActions subject={subject} />
 
-      <div className="mb-4.5 flex gap-2.5">
-        <Button variant="primary" disabled title="Exam CRUD coming next">
-          <Plus size={14} /> New Exam
-        </Button>
-        <Button variant="ghost" disabled title="Exam CRUD coming next">
-          <Upload size={14} /> Upload Questions
-        </Button>
-      </div>
+      <SubjectExamsToolbar subjectId={subject.id} />
 
       {subject.exams.length === 0 ? (
         <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-exam-border bg-exam-white p-8 text-center">

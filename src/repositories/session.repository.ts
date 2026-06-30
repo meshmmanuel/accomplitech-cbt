@@ -33,6 +33,7 @@ export class SessionRepository {
             },
           },
         },
+        _count: { select: { attempts: true } },
       },
     });
   }
@@ -55,6 +56,15 @@ export class SessionRepository {
     });
   }
 
+  findByExamCodeConflict(examCode: string, excludeId?: string) {
+    return db.examSession.findFirst({
+      where: {
+        examCode: examCode.toUpperCase(),
+        ...(excludeId ? { NOT: { id: excludeId } } : {}),
+      },
+    });
+  }
+
   create(data: Prisma.ExamSessionCreateInput) {
     return db.examSession.create({ data });
   }
@@ -67,6 +77,21 @@ export class SessionRepository {
     return db.examSession.update({
       where: { id },
       data: { status },
+    });
+  }
+
+  delete(id: string) {
+    return db.examSession.delete({ where: { id } });
+  }
+
+  replaceSessionExams(sessionId: string, examIds: string[]) {
+    return db.$transaction(async (tx) => {
+      await tx.examSessionExam.deleteMany({ where: { sessionId } });
+      if (examIds.length > 0) {
+        await tx.examSessionExam.createMany({
+          data: examIds.map((examId) => ({ sessionId, examId })),
+        });
+      }
     });
   }
 

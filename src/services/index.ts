@@ -5,3 +5,6 @@ export { questionService } from "@/services/question.service";
 export { sessionService } from "@/services/session.service";
 export { attemptService } from "@/services/attempt.service";
 export { overviewService } from "@/services/overview.service";
+export { examClientService } from "@/services/exam-client.service";
+export { monitorService } from "@/services/monitor.service";
+export { resultsService } from "@/services/results.service";

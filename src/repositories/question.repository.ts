@@ -32,6 +32,15 @@ export class QuestionRepository {
   deleteByExam(examId: string) {
     return db.question.deleteMany({ where: { examId } });
   }
+
+  getMaxSortOrder(examId: string) {
+    return db.question
+      .aggregate({
+        where: { examId },
+        _max: { sortOrder: true },
+      })
+      .then((result) => result._max.sortOrder ?? -1);
+  }
 }
 
 export const questionRepository = new QuestionRepository();

@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { ServerConnectBanner } from "@/components/admin/server-connect-banner";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({
@@ -54,7 +55,12 @@ export default function AdminLayout({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-5.5">{children}</main>
+        <main className="flex-1 overflow-y-auto p-5.5">
+          {(pathname === "/admin" || pathname === "/admin/settings") && (
+            <ServerConnectBanner />
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

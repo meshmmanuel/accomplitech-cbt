@@ -1,21 +1,30 @@
-import { SessionCard } from "@/components/admin/session-card";
-import { Button } from "@/components/ui/button";
-import { sessions } from "@/data/mock/sessions";
-import { Plus } from "lucide-react";
+import { SessionsPanel } from "@/components/admin/sessions-panel";
+import { getAdminSessionOrRedirect } from "@/lib/auth-server";
+import { sessionService } from "@/services/session.service";
+import { AlertCircle } from "lucide-react";
 
-export default function AdminSessionsPage() {
-  return (
-    <>
-      <div className="mb-4.5 flex gap-2.5">
-        <Button variant="primary">
-          <Plus size={14} /> New Session
-        </Button>
+export default async function AdminSessionsPage() {
+  await getAdminSessionOrRedirect();
+
+  try {
+    const [sessions, exams] = await Promise.all([
+      sessionService.listForDefaultInstitution(),
+      sessionService.listExamsForPicker(),
+    ]);
+
+    return <SessionsPanel sessions={sessions} exams={exams} />;
+  } catch (error) {
+    console.error("Admin sessions page failed:", error);
+    return (
+      <div className="flex min-h-60 flex-col items-center justify-center rounded-[13px] border border-exam-border bg-exam-white p-8 text-center">
+        <AlertCircle size={28} className="mb-3 text-exam-red" />
+        <p className="mb-1 text-[15px] font-bold text-exam-text">
+          Failed to load sessions
+        </p>
+        <p className="text-sm text-exam-muted">
+          Check your database connection and try again.
+        </p>
       </div>
-      <div className="flex flex-col gap-3">
-        {sessions.map((session) => (
-          <SessionCard key={session.id} session={session} />
-        ))}
-      </div>
-    </>
-  );
+    );
+  }
 }

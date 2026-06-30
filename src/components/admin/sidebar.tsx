@@ -13,9 +13,10 @@ import {
   Settings,
   TrendingUp,
 } from "lucide-react";
-import { liveStudents } from "@/data/mock/live";
-import { results } from "@/data/mock/results";
-import { apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { MonitorLiveState } from "@/modules/clients/types";
+import type { OverviewStats } from "@/modules/overview/types";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/admin", icon: BarChart3, label: "Overview", exact: true },
@@ -25,13 +26,13 @@ const navItems = [
     href: "/admin/monitor",
     icon: Activity,
     label: "Monitor",
-    badge: liveStudents.filter((s) => s.status === "active").length || null,
+    badgeKey: "inExam" as const,
   },
   {
     href: "/admin/results",
     icon: Award,
     label: "Results & Grading",
-    badge: results.filter((r) => r.th === null && r.thT > 0).length || null,
+    badgeKey: "pendingGrades" as const,
   },
   { href: "/admin/reports", icon: TrendingUp, label: "Reports" },
   { href: "/admin/settings", icon: Settings, label: "Settings" },
@@ -40,7 +41,24 @@ const navItems = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const activeCount = liveStudents.filter((s) => s.status === "active").length;
+  const [inExamCount, setInExamCount] = useState(0);
+  const [pendingGrades, setPendingGrades] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      const [monitor, stats] = await Promise.all([
+        apiGet<MonitorLiveState>("/api/monitor/live"),
+        apiGet<OverviewStats>("/api/overview/stats"),
+      ]);
+
+      if (monitor.data) setInExamCount(monitor.data.summary.inExam);
+      if (stats.data) setPendingGrades(stats.data.pendingGrades);
+    };
+
+    void load();
+    const timer = setInterval(() => void load(), 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -81,13 +99,14 @@ export function AdminSidebar() {
             >
               <Icon size={17} />
               {item.label}
-              {item.badge ? (
-                <span
-                  className={`ml-auto rounded-full px-1.5 py-px text-[10px] font-bold text-exam-white ${
-                    item.href.includes("results") ? "bg-exam-amber" : "bg-exam-green"
-                  }`}
-                >
-                  {item.badge}
+              {item.badgeKey === "inExam" && inExamCount > 0 ? (
+                <span className="ml-auto rounded-full bg-exam-green px-1.5 py-px text-[10px] font-bold text-exam-white">
+                  {inExamCount}
+                </span>
+              ) : null}
+              {item.badgeKey === "pendingGrades" && pendingGrades > 0 ? (
+                <span className="ml-auto rounded-full bg-exam-amber px-1.5 py-px text-[10px] font-bold text-exam-white">
+                  {pendingGrades}
                 </span>
               ) : null}
             </Link>
@@ -99,7 +118,7 @@ export function AdminSidebar() {
         {[
           { label: "Server", value: "Online", ok: true },
           { label: "Network", value: "LAN", ok: true },
-          { label: "Active", value: `${activeCount} students`, ok: true },
+          { label: "Active", value: `${inExamCount} in exam`, ok: true },
         ].map((stat) => (
           <div
             key={stat.label}

@@ -13,6 +13,17 @@ export class ExamRepository {
     });
   }
 
+  findByIdWithRelations(id: string) {
+    return db.exam.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { questions: true, sessionExams: true, attempts: true },
+        },
+      },
+    });
+  }
+
   findBySubject(subjectId: string) {
     return db.exam.findMany({
       where: { subjectId },
@@ -20,6 +31,24 @@ export class ExamRepository {
         _count: { select: { questions: true } },
       },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  findAllByInstitution(institutionId: string) {
+    return db.exam.findMany({
+      where: { subject: { institutionId } },
+      include: { subject: true },
+      orderBy: [{ subject: { code: "asc" } }, { name: "asc" }],
+    });
+  }
+
+  findManyByIdsForInstitution(institutionId: string, examIds: string[]) {
+    return db.exam.findMany({
+      where: {
+        id: { in: examIds },
+        subject: { institutionId },
+      },
+      include: { subject: true },
     });
   }
 

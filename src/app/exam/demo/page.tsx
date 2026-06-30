@@ -10,22 +10,45 @@ import { Button } from "@/components/ui/button";
 import { demoExamQuestions } from "@/data/mock/questions";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const EXAM_INSTRUCTIONS = `1. Read all questions carefully before answering.
 2. For theory questions, write legibly in your answer booklet.
 3. No programmable calculators allowed.
 4. Mobile phones must be switched off and placed under your desk.`;
 
+const OPTION_LETTERS = ["A", "B", "C", "D"];
+
 export default function ExamDemoPage() {
   const router = useRouter();
   const questions = demoExamQuestions;
+  const navQuestions = useMemo(
+    () =>
+      questions.map((q, index) => ({
+        id: String(index),
+        legacyType: q.type,
+      })),
+    [questions],
+  );
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [timeLeft, setTimeLeft] = useState(5400);
   const [showSubmit, setShowSubmit] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+
+  const answerMap = useMemo(() => {
+    const map: Record<string, string | null | undefined> = {};
+    for (const [index, optionIndex] of Object.entries(answers)) {
+      map[index] = OPTION_LETTERS[optionIndex] ?? null;
+    }
+    return map;
+  }, [answers]);
+
+  const flaggedIds = useMemo(
+    () => new Set([...flagged].map(String)),
+    [flagged],
+  );
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -72,10 +95,10 @@ export default function ExamDemoPage() {
 
       <div className="flex flex-1 overflow-hidden">
         <QuestionNavigator
-          questions={questions}
+          questions={navQuestions}
           current={current}
-          answers={answers}
-          flagged={flagged}
+          answers={answerMap}
+          flagged={flaggedIds}
           onSelect={setCurrent}
         />
 

@@ -50,21 +50,40 @@ export async function getAuthSession(): Promise<AuthSession | null> {
 }
 
 export async function requireAdminSession(): Promise<AdminAuthUser> {
-  const session = await getAuthSession();
-  if (!session || session.kind !== "admin" || !session.admin) {
+  const adminToken = await getAdminAccessToken();
+  if (!adminToken) {
     throw new AppError("Authentication required", 401);
   }
-  return session.admin;
+
+  const payload = await verifyAccessToken(adminToken, "admin");
+  if (payload.kind !== "admin") {
+    throw new AppError("Authentication required", 401);
+  }
+
+  return {
+    id: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    role: payload.role,
+    institutionId: payload.institutionId,
+  };
 }
 
 export async function requireStudentSession(): Promise<
   Omit<StudentTokenPayload, "kind" | "sub">
 > {
-  const session = await getAuthSession();
-  if (!session || session.kind !== "student" || !session.student) {
+  const studentToken = await getStudentAccessToken();
+  if (!studentToken) {
     throw new AppError("Authentication required", 401);
   }
-  return session.student;
+
+  const payload = await verifyAccessToken(studentToken, "student");
+  if (payload.kind !== "student") {
+    throw new AppError("Authentication required", 401);
+  }
+
+  const { kind: _, sub: __, ...student } = payload;
+  return student;
 }
 
 export async function getAdminSessionOrRedirect(): Promise<AdminAuthUser> {

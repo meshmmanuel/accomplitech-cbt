@@ -26,8 +26,40 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
+function isPrismaClientReady(client: PrismaClient) {
+  return Boolean(client.examClient && client.clientConnectionEvent);
 }
+
+function getPrismaClient() {
+  const cached = globalForPrisma.prisma;
+  if (cached && isPrismaClientReady(cached)) {
+    return cached;
+  }
+
+  if (cached) {
+    void cached.$disconnect().catch(() => undefined);
+    globalForPrisma.prisma = undefined;
+  }
+
+  const client = createPrismaClient();
+  if (!isPrismaClientReady(client)) {
+    throw new Error(
+      "Prisma client is missing ExamClient models. Run `npx prisma generate` and restart the dev server.",
+    );
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+  }
+  return client;
+}
+
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(client)
+      : value;
+  },
+});

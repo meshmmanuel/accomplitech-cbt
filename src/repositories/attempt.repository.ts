@@ -30,6 +30,14 @@ export class AttemptRepository {
     });
   }
 
+  findForStudentExam(sessionId: string, examId: string, admissionNumber: string) {
+    return db.examAttempt.findFirst({
+      where: { sessionId, examId, admissionNumber },
+      orderBy: { startedAt: "desc" },
+      include: { answers: true },
+    });
+  }
+
   findBySession(sessionId: string) {
     return db.examAttempt.findMany({
       where: { sessionId },
@@ -37,6 +45,34 @@ export class AttemptRepository {
         exam: { include: { subject: true } },
       },
       orderBy: { startedAt: "desc" },
+    });
+  }
+
+  findBySessionAndAdmission(sessionId: string, admissionNumber: string) {
+    return db.examAttempt.findMany({
+      where: { sessionId, admissionNumber },
+      include: {
+        exam: {
+          include: {
+            subject: true,
+            _count: { select: { questions: true } },
+          },
+        },
+      },
+      orderBy: { startedAt: "asc" },
+    });
+  }
+
+  findInProgressBySessionAndAdmission(
+    sessionId: string,
+    admissionNumber: string,
+  ) {
+    return db.examAttempt.findMany({
+      where: {
+        sessionId,
+        admissionNumber,
+        status: "IN_PROGRESS",
+      },
     });
   }
 
@@ -94,6 +130,30 @@ export class AttemptRepository {
         status: "IN_PROGRESS",
         session: { institutionId },
       },
+    });
+  }
+
+  countByExam(examId: string) {
+    return db.examAttempt.count({ where: { examId } });
+  }
+
+  findSubmittedByInstitution(institutionId: string) {
+    return db.examAttempt.findMany({
+      where: {
+        session: { institutionId },
+        status: { in: ["SUBMITTED", "GRADED"] },
+      },
+      include: {
+        session: true,
+        exam: {
+          include: {
+            subject: true,
+            questions: true,
+          },
+        },
+        answers: true,
+      },
+      orderBy: [{ submittedAt: "desc" }, { startedAt: "desc" }],
     });
   }
 }

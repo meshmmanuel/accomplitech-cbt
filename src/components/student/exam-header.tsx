@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "@/lib/utils";
 import { Clock } from "lucide-react";
+import Link from "next/link";
 
 interface ExamHeaderProps {
   title: string;
   subtitle: string;
   timeLeft: number;
   onSubmit: () => void;
+  switchHref?: string;
 }
 
 export function ExamHeader({
@@ -17,6 +19,7 @@ export function ExamHeader({
   subtitle,
   timeLeft,
   onSubmit,
+  switchHref,
 }: ExamHeaderProps) {
   const timerColor =
     timeLeft > 600
@@ -46,6 +49,14 @@ export function ExamHeader({
             {formatDuration(timeLeft)}
           </span>
         </div>
+        {switchHref && (
+          <Link
+            href={switchHref}
+            className="inline-flex items-center rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-exam-white hover:bg-white/10"
+          >
+            Switch exam
+          </Link>
+        )}
         <Button variant="primary" size="sm" onClick={onSubmit}>
           Submit Exam
         </Button>

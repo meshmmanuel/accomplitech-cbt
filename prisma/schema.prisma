@@ -44,6 +44,13 @@ enum AttemptStatus {
   GRADED
 }
 
+enum ClientActivity {
+  IDLE
+  INSTRUCTIONS
+  IN_EXAM
+  SUBMITTED
+}
+
 model Institution {
   id        String   @id @default(cuid())
   name      String
@@ -53,6 +60,7 @@ model Institution {
   users     User[]
   subjects  Subject[]
   sessions  ExamSession[]
+  clients   ExamClient[]
 }
 
 model User {
@@ -110,7 +118,11 @@ model Exam {
 model Question {
   id            String       @id @default(cuid())
   examId        String
+  questionType  String       @default("multiple_choice")
   type          QuestionType
+  content       Json
+  answer        Json?
+  assets        Json?
   text          String
   imagePath     String?
   marks         Int          @default(1)
@@ -144,6 +156,18 @@ model ExamSession {
   institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   sessionExams  ExamSessionExam[]
   attempts      ExamAttempt[]
+  participations SessionParticipation[]
+}
+
+model SessionParticipation {
+  id              String      @id @default(cuid())
+  sessionId       String
+  admissionNumber String
+  startedAt       DateTime    @default(now())
+  endedAt         DateTime?
+  session         ExamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, admissionNumber])
 }
 
 model ExamSessionExam {
@@ -171,6 +195,7 @@ model ExamAttempt {
   exam            Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
   answers         ExamAnswer[]
 
+  @@unique([sessionId, examId, admissionNumber])
   @@index([admissionNumber])
 }
 
@@ -196,4 +221,38 @@ model AuditLog {
   metadata  Json?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExamClient {
+  id              String         @id
+  institutionId   String?
+  seatLabel       String?
+  ipAddress       String?
+  userAgent       String?
+  activity        ClientActivity @default(IDLE)
+  sessionId       String?
+  admissionNumber String?
+  activeAttemptId String?
+  lastSeenAt      DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  institution     Institution?   @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  connectionEvents ClientConnectionEvent[]
+
+  @@index([lastSeenAt])
+  @@index([institutionId])
+}
+
+model ClientConnectionEvent {
+  id              String     @id @default(cuid())
+  clientId        String
+  eventType       String
+  ipAddress       String?
+  sessionId       String?
+  admissionNumber String?
+  detail          String?
+  createdAt       DateTime   @default(now())
+  client          ExamClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
 }
