@@ -38,6 +38,7 @@ async function main() {
   await prisma.question.deleteMany();
   await prisma.exam.deleteMany();
   await prisma.subject.deleteMany();
+  await prisma.userSubject.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.user.deleteMany();
   await prisma.institution.deleteMany();
@@ -101,6 +102,28 @@ async function main() {
       },
     });
   }
+
+  const lecturerPasswordHash = await bcrypt.hash(
+    SEED_CREDENTIALS.lecturerPassword,
+    10,
+  );
+
+  await prisma.user.create({
+    data: {
+      id: SEED_IDS.lecturer,
+      institutionId: institution.id,
+      email: SEED_CREDENTIALS.lecturerEmail,
+      passwordHash: lecturerPasswordHash,
+      name: "Demo Lecturer",
+      role: UserRole.LECTURER,
+      subjectAssignments: {
+        create: [
+          { subjectId: SEED_IDS.subjects.cs101 },
+          { subjectId: SEED_IDS.subjects.phy101 },
+        ],
+      },
+    },
+  });
 
   const exams = [
     {
@@ -381,6 +404,9 @@ async function main() {
 
   console.log("Seed complete.");
   console.log(`  Admin: ${SEED_CREDENTIALS.adminEmail} / ${SEED_CREDENTIALS.adminPassword}`);
+  console.log(
+    `  Lecturer: ${SEED_CREDENTIALS.lecturerEmail} / ${SEED_CREDENTIALS.lecturerPassword}`,
+  );
   console.log(`  Student exam code: ${SEED_CREDENTIALS.demoExamCode} (session: Mid-Term Assessment)`);
 }
 

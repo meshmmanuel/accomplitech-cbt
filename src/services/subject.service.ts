@@ -1,5 +1,12 @@
 import { AppError } from "@/lib/errors";
 import {
+  assertCanManageSubjects,
+  assertSubjectAccess,
+  filterSubjectsForAdmin,
+  getAssignedSubjectIds,
+} from "@/lib/admin-access";
+import type { AdminAuthUser } from "@/modules/auth/types";
+import {
   toSubjectDetail,
   toSubjectListItem,
   type CreateSubjectInput,
@@ -17,20 +24,45 @@ export class SubjectService {
     return institution.id;
   }
 
+  async listAllForInstitution(admin: AdminAuthUser) {
+    const subjects = await subjectRepository.findAllByInstitution(
+      admin.institutionId,
+    );
+    return subjects.map(toSubjectListItem);
+  }
+
+  async listForAdmin(admin: AdminAuthUser) {
+    const subjects = await subjectRepository.findAllByInstitution(
+      admin.institutionId,
+    );
+    const assignedSubjectIds = await getAssignedSubjectIds(admin);
+    const filtered = filterSubjectsForAdmin(
+      admin,
+      subjects,
+      assignedSubjectIds,
+    );
+    return filtered.map(toSubjectListItem);
+  }
+
   async listForDefaultInstitution() {
     const institutionId = await this.getDefaultInstitutionId();
     const subjects = await subjectRepository.findAllByInstitution(institutionId);
     return subjects.map(toSubjectListItem);
   }
 
-  async getById(id: string) {
+  async getByIdForAdmin(id: string, admin: AdminAuthUser) {
     const subject = await subjectRepository.findById(id);
-    if (!subject) return null;
+    if (!subject || subject.institutionId !== admin.institutionId) {
+      return null;
+    }
+
+    await assertSubjectAccess(admin, id);
     return toSubjectDetail(subject);
   }
 
-  async create(input: CreateSubjectInput) {
-    const institutionId = await this.getDefaultInstitutionId();
+  async create(input: CreateSubjectInput, admin: AdminAuthUser) {
+    assertCanManageSubjects(admin);
+    const institutionId = admin.institutionId;
     const existing = await subjectRepository.findByCode(institutionId, input.code);
     if (existing) {
       throw new AppError(`Subject code "${input.code}" already exists`, 409);
@@ -50,7 +82,8 @@ export class SubjectService {
     });
   }
 
-  async update(id: string, input: UpdateSubjectInput) {
+  async update(id: string, input: UpdateSubjectInput, admin: AdminAuthUser) {
+    assertCanManageSubjects(admin);
     const existing = await subjectRepository.findById(id);
     if (!existing) {
       throw new AppError("Subject not found", 404);
@@ -84,7 +117,8 @@ export class SubjectService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, admin: AdminAuthUser) {
+    assertCanManageSubjects(admin);
     const existing = await subjectRepository.findById(id);
     if (!existing) {
       throw new AppError("Subject not found", 404);

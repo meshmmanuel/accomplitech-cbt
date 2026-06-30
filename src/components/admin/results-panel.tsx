@@ -1,13 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Download, Eye, PenLine } from "lucide-react";
+import { GradeTheoryModal } from "@/components/admin/grade-theory-modal";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { AttemptResultsSummary } from "@/services/attempt.service";
 
 interface ResultsPanelProps {
   items: AttemptResultsSummary[];
+  canGrade?: boolean;
 }
 
 function formatSubmittedAt(value: string | null) {
@@ -21,8 +24,10 @@ function formatSubmittedAt(value: string | null) {
   });
 }
 
-export function ResultsPanel({ items }: ResultsPanelProps) {
+export function ResultsPanel({ items, canGrade = true }: ResultsPanelProps) {
+  const router = useRouter();
   const [gradingId, setGradingId] = useState<string | null>(null);
+  const [gradingReadOnly, setGradingReadOnly] = useState(false);
   const [sessionFilter, setSessionFilter] = useState("all");
   const [examFilter, setExamFilter] = useState("all");
 
@@ -109,7 +114,6 @@ export function ResultsPanel({ items }: ResultsPanelProps) {
                 <tr className="bg-surface">
                   {[
                     "Student",
-                    "Matric",
                     "Exam",
                     "Objective",
                     "Theory",
@@ -129,9 +133,11 @@ export function ResultsPanel({ items }: ResultsPanelProps) {
               <tbody>
                 {filtered.map((item) => {
                   const total =
-                    item.objectiveScore !== null && item.theoryScore !== null
-                      ? item.objectiveScore + item.theoryScore
-                      : null;
+                    item.theoryTotal > 0
+                      ? item.theoryScore !== null
+                        ? (item.objectiveScore ?? 0) + item.theoryScore
+                        : null
+                      : item.objectiveScore;
                   const maxTotal = (item.objectiveTotal || 0) + (item.theoryTotal || 0);
                   const pct =
                     total !== null && maxTotal > 0
@@ -151,9 +157,6 @@ export function ResultsPanel({ items }: ResultsPanelProps) {
                             {item.studentName}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-3.5 py-3 font-mono text-xs text-exam-muted">
-                        {item.admissionNumber}
                       </td>
                       <td className="whitespace-nowrap px-3.5 py-3 text-xs font-medium text-exam-text">
                         {item.subjectCode} - {item.examName}
@@ -194,18 +197,34 @@ export function ResultsPanel({ items }: ResultsPanelProps) {
                         {formatSubmittedAt(item.submittedAt)}
                       </td>
                       <td className="px-3.5 py-3">
-                        {pending ? (
+                        {pending && canGrade ? (
                           <Button
                             variant="primary"
                             size="sm"
-                            onClick={() => setGradingId(item.attemptId)}
+                            onClick={() => {
+                              setGradingReadOnly(false);
+                              setGradingId(item.attemptId);
+                            }}
                           >
                             <PenLine size={12} /> Grade
                           </Button>
-                        ) : (
-                          <Button variant="ghost" size="sm">
+                        ) : pending ? (
+                          <span className="text-xs font-semibold text-exam-amber">
+                            Pending
+                          </span>
+                        ) : item.theoryTotal > 0 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setGradingReadOnly(true);
+                              setGradingId(item.attemptId);
+                            }}
+                          >
                             <Eye size={12} /> View
                           </Button>
+                        ) : (
+                          <span className="text-xs text-exam-muted">—</span>
                         )}
                       </td>
                     </tr>
@@ -218,25 +237,12 @@ export function ResultsPanel({ items }: ResultsPanelProps) {
       )}
 
       {gradingId !== null && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-navy-dark/65 p-4">
-          <div className="max-h-[88vh] w-full max-w-[520px] overflow-y-auto rounded-[18px] bg-exam-white p-7 shadow-2xl">
-            <h3 className="mb-5 text-[17px] font-extrabold text-exam-text">
-              Grade Theory —{" "}
-              {filtered.find((item) => item.attemptId === gradingId)?.studentName}
-            </h3>
-            <p className="mb-4 text-[13px] text-exam-muted">
-              Theory grading UI is next. This row now comes from real submitted
-              attempts.
-            </p>
-            <Button
-              variant="primary"
-              className="w-full justify-center"
-              onClick={() => setGradingId(null)}
-            >
-              Close
-            </Button>
-          </div>
-        </div>
+        <GradeTheoryModal
+          attemptId={gradingId}
+          readOnly={gradingReadOnly}
+          onClose={() => setGradingId(null)}
+          onSuccess={() => router.refresh()}
+        />
       )}
     </>
   );

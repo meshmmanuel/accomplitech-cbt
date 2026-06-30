@@ -2,6 +2,7 @@
 export const SEED_IDS = {
   institution: "inst_examlink_demo",
   admin: "user_admin_demo",
+  lecturer: "user_lecturer_demo",
   subjects: {
     cs101: "subj_cs101",
     mth301: "subj_mth301",
@@ -27,6 +28,8 @@ export const SEED_IDS = {
 export const SEED_CREDENTIALS = {
   adminEmail: "admin@examlink.local",
   adminPassword: "admin123",
+  lecturerEmail: "lecturer@examlink.local",
+  lecturerPassword: "lecturer123",
   /** Active session exam code for student login testing */
   demoExamCode: "MT2025",
 } as const;

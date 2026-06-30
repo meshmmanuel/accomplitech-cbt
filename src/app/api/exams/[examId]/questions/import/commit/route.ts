@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import { ok, fail } from "@/lib/api-response";
-import { requireAdminSession } from "@/lib/auth-server";
+import { requireExamAdminAccess } from "@/lib/exam-route-auth";
 import { isAppError } from "@/lib/errors";
 import { commitImportSchema } from "@/modules/questions/commit-schema";
 import { questionService } from "@/services/question.service";
@@ -9,8 +9,8 @@ type RouteContext = { params: Promise<{ examId: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
     const { examId } = await context.params;
+    await requireExamAdminAccess(examId);
     const body = commitImportSchema.parse(await request.json());
 
     const result = await questionService.importCanonicalQuestions(

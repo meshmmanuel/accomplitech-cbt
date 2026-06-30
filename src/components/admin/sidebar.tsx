@@ -15,35 +15,42 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { navItemsForRole } from "@/lib/admin-nav";
+import type { AuthSession } from "@/modules/auth/types";
+
 import type { MonitorLiveState } from "@/modules/clients/types";
 import type { OverviewStats } from "@/modules/overview/types";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const navItems = [
-  { href: "/admin", icon: BarChart3, label: "Overview", exact: true },
-  { href: "/admin/subjects", icon: BookMarked, label: "Subjects & Exams" },
-  { href: "/admin/sessions", icon: Layers, label: "Sessions" },
-  {
-    href: "/admin/monitor",
-    icon: Activity,
-    label: "Monitor",
-    badgeKey: "inExam" as const,
-  },
-  {
-    href: "/admin/results",
-    icon: Award,
-    label: "Results & Grading",
-    badgeKey: "pendingGrades" as const,
-  },
-  { href: "/admin/reports", icon: TrendingUp, label: "Reports" },
-  { href: "/admin/settings", icon: Settings, label: "Settings" },
-];
+const navIcons = {
+  "/admin": BarChart3,
+  "/admin/subjects": BookMarked,
+  "/admin/sessions": Layers,
+  "/admin/monitor": Activity,
+  "/admin/results": Award,
+  "/admin/reports": TrendingUp,
+  "/admin/settings": Settings,
+} as const;
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [inExamCount, setInExamCount] = useState(0);
   const [pendingGrades, setPendingGrades] = useState(0);
+
+  const navItems = useMemo(() => {
+    if (!authSession?.admin) return navItemsForRole("VIEWER");
+    return navItemsForRole(authSession.admin.role);
+  }, [authSession]);
+
+  useEffect(() => {
+    void apiGet<AuthSession>("/api/auth/me").then((result) => {
+      if (result.data?.kind === "admin" && result.data.admin) {
+        setAuthSession(result.data);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -86,7 +93,7 @@ export function AdminSidebar() {
 
       <nav className="flex-1 overflow-y-auto p-2">
         {navItems.map((item) => {
-          const Icon = item.icon;
+          const Icon = navIcons[item.href as keyof typeof navIcons];
           const active = isActive(item.href, item.exact);
           return (
             <Link

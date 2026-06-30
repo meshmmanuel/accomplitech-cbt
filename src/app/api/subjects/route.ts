@@ -7,8 +7,8 @@ import { subjectService } from "@/services/subject.service";
 
 export async function GET() {
   try {
-    await requireAdminSession();
-    const subjects = await subjectService.listForDefaultInstitution();
+    const admin = await requireAdminSession();
+    const subjects = await subjectService.listForAdmin(admin);
     return ok(subjects);
   } catch (error) {
     console.error("GET /api/subjects failed:", error);
@@ -19,9 +19,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const body = createSubjectSchema.parse(await request.json());
-    const subject = await subjectService.create(body);
+    const subject = await subjectService.create(body, admin);
     return ok(subject, 201);
   } catch (error) {
     if (error instanceof ZodError) {

@@ -18,9 +18,9 @@ export default async function SubjectExamsPage({
 }: {
   params: Promise<{ subjectId: string }>;
 }) {
-  await getAdminSessionOrRedirect();
+  const admin = await getAdminSessionOrRedirect();
   const { subjectId } = await params;
-  const subject = await subjectService.getById(subjectId);
+  const subject = await subjectService.getByIdForAdmin(subjectId, admin);
   if (!subject) notFound();
 
   return (

@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import { ok, fail } from "@/lib/api-response";
-import { requireAdminSession } from "@/lib/auth-server";
+import { requireExamAdminAccess } from "@/lib/exam-route-auth";
 import { isAppError } from "@/lib/errors";
 import { createQuestionInputSchema } from "@/modules/questions";
 import { questionService } from "@/services/question.service";
@@ -11,8 +11,8 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
-    const { questionId } = await context.params;
+    const { examId, questionId } = await context.params;
+    await requireExamAdminAccess(examId);
     const body = createQuestionInputSchema.parse(await request.json());
     const question = await questionService.update(questionId, body);
     return ok(question);
@@ -31,8 +31,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
-    const { questionId } = await context.params;
+    const { examId, questionId } = await context.params;
+    await requireExamAdminAccess(examId);
     await questionService.delete(questionId);
     return ok({ deleted: true });
   } catch (error) {

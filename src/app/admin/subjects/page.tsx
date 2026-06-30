@@ -1,14 +1,20 @@
 import { SubjectsPanel } from "@/components/admin/subjects-panel";
 import { getAdminSessionOrRedirect } from "@/lib/auth-server";
+import { canManageSubjects } from "@/lib/admin-roles";
 import { subjectService } from "@/services/subject.service";
 import { AlertCircle } from "lucide-react";
 
 export default async function AdminSubjectsPage() {
-  await getAdminSessionOrRedirect();
+  const admin = await getAdminSessionOrRedirect();
 
   try {
-    const subjects = await subjectService.listForDefaultInstitution();
-    return <SubjectsPanel subjects={subjects} />;
+    const subjects = await subjectService.listForAdmin(admin);
+    return (
+      <SubjectsPanel
+        subjects={subjects}
+        canManageSubjects={canManageSubjects(admin.role)}
+      />
+    );
   } catch (error) {
     console.error("Admin subjects page failed:", error);
     return (

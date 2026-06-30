@@ -9,9 +9,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { id } = await context.params;
-    const subject = await subjectService.getById(id);
+    const subject = await subjectService.getByIdForAdmin(id, admin);
     if (!subject) return fail("Subject not found", 404);
     return ok(subject);
   } catch (error) {
@@ -23,10 +23,10 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { id } = await context.params;
     const body = updateSubjectSchema.parse(await request.json());
-    const subject = await subjectService.update(id, body);
+    const subject = await subjectService.update(id, body, admin);
     return ok(subject);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -40,9 +40,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { id } = await context.params;
-    await subjectService.delete(id);
+    await subjectService.delete(id, admin);
     return ok({ deleted: true });
   } catch (error) {
     console.error("DELETE /api/subjects/[id] failed:", error);

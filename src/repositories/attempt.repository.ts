@@ -112,15 +112,58 @@ export class AttemptRepository {
     });
   }
 
-  submit(id: string, score: number | null, timeSpentSeconds: number) {
+  submit(
+    id: string,
+    score: number | null,
+    timeSpentSeconds: number,
+    status: AttemptStatus = "SUBMITTED",
+  ) {
     return db.examAttempt.update({
       where: { id },
       data: {
-        status: "SUBMITTED" satisfies AttemptStatus,
+        status,
         submittedAt: new Date(),
         score,
         timeSpentSeconds,
       },
+    });
+  }
+
+  gradeTheory(input: {
+    attemptId: string;
+    theoryScore: number;
+    gradedById: string;
+    marks: Array<{ questionId: string; marksAwarded: number }>;
+  }) {
+    return db.$transaction(async (tx) => {
+      for (const mark of input.marks) {
+        await tx.examAnswer.upsert({
+          where: {
+            attemptId_questionId: {
+              attemptId: input.attemptId,
+              questionId: mark.questionId,
+            },
+          },
+          create: {
+            attemptId: input.attemptId,
+            questionId: mark.questionId,
+            marksAwarded: mark.marksAwarded,
+          },
+          update: {
+            marksAwarded: mark.marksAwarded,
+          },
+        });
+      }
+
+      return tx.examAttempt.update({
+        where: { id: input.attemptId },
+        data: {
+          theoryScore: input.theoryScore,
+          gradedAt: new Date(),
+          gradedById: input.gradedById,
+          status: "GRADED",
+        },
+      });
     });
   }
 

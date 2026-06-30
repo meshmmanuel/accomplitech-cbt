@@ -9,8 +9,9 @@ type RouteContext = { params: Promise<{ examId: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { examId } = await context.params;
+    await examService.requireAccess(admin, examId);
     const exam = await examService.getDetail(examId);
     if (!exam) return fail("Exam not found", 404);
     return ok(exam);
@@ -23,8 +24,9 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { examId } = await context.params;
+    await examService.requireAccess(admin, examId);
     const body = updateExamSchema.parse(await request.json());
     const exam = await examService.update(examId, body);
     return ok(exam);
@@ -40,8 +42,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { examId } = await context.params;
+    await examService.requireAccess(admin, examId);
     await examService.delete(examId);
     return ok({ deleted: true });
   } catch (error) {

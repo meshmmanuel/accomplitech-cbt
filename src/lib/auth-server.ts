@@ -10,6 +10,7 @@ import type {
   AuthSession,
   StudentTokenPayload,
 } from "@/modules/auth/types";
+import { canGradeTheory, canManageUsers } from "@/lib/admin-roles";
 
 export async function getAuthSession(): Promise<AuthSession | null> {
   const [adminToken, studentToken] = await Promise.all([
@@ -84,6 +85,22 @@ export async function requireStudentSession(): Promise<
 
   const { kind: _, sub: __, ...student } = payload;
   return student;
+}
+
+export async function requireUserManagerSession(): Promise<AdminAuthUser> {
+  const admin = await requireAdminSession();
+  if (!canManageUsers(admin.role)) {
+    throw new AppError("You do not have permission to manage users", 403);
+  }
+  return admin;
+}
+
+export async function requireGraderSession(): Promise<AdminAuthUser> {
+  const admin = await requireAdminSession();
+  if (!canGradeTheory(admin.role)) {
+    throw new AppError("You do not have permission to grade exams", 403);
+  }
+  return admin;
 }
 
 export async function getAdminSessionOrRedirect(): Promise<AdminAuthUser> {

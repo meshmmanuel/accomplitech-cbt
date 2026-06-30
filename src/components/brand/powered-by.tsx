@@ -41,14 +41,6 @@ export function PoweredBy({ className, onDark = false }: PoweredByProps) {
         />
         <span className="text-sm font-bold">{BRAND.companyName}</span>
       </a>
-      <p
-        className={cn(
-          "m-0 max-w-xs text-[11px] leading-relaxed",
-          onDark ? "text-[#5A6F9E]" : "text-exam-muted",
-        )}
-      >
-        {BRAND.companyDescription}
-      </p>
     </div>
   );
 }

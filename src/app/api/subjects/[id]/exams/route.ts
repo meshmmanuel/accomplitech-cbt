@@ -9,10 +9,10 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
+    const admin = await requireAdminSession();
     const { id: subjectId } = await context.params;
     const body = createExamSchema.parse(await request.json());
-    const exam = await examService.create(subjectId, body);
+    const exam = await examService.create(subjectId, body, admin);
     return ok(exam, 201);
   } catch (error) {
     if (error instanceof ZodError) {

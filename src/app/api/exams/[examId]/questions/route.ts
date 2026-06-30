@@ -1,16 +1,16 @@
 import { ZodError } from "zod";
 import { ok, fail } from "@/lib/api-response";
-import { requireAdminSession } from "@/lib/auth-server";
 import { isAppError } from "@/lib/errors";
 import { createQuestionInputSchema } from "@/modules/questions";
+import { requireExamAdminAccess } from "@/lib/exam-route-auth";
 import { questionService } from "@/services/question.service";
 
 type RouteContext = { params: Promise<{ examId: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
     const { examId } = await context.params;
+    await requireExamAdminAccess(examId);
     const questions = await questionService.listByExam(examId);
     return ok(questions);
   } catch (error) {
@@ -22,8 +22,8 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
     const { examId } = await context.params;
+    await requireExamAdminAccess(examId);
     const body = createQuestionInputSchema.parse(await request.json());
     const question = await questionService.create(examId, body);
     return ok(question, 201);

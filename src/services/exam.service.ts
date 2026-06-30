@@ -1,4 +1,6 @@
 import { AppError } from "@/lib/errors";
+import { assertSubjectAccess } from "@/lib/admin-access";
+import type { AdminAuthUser } from "@/modules/auth/types";
 import {
   examCodeToType,
   toExamDetail,
@@ -9,6 +11,16 @@ import { examRepository } from "@/repositories/exam.repository";
 import { subjectRepository } from "@/repositories/subject.repository";
 
 export class ExamService {
+  async requireAccess(admin: AdminAuthUser, examId: string) {
+    const exam = await examRepository.findById(examId);
+    if (!exam) {
+      throw new AppError("Exam not found", 404);
+    }
+
+    await assertSubjectAccess(admin, exam.subjectId);
+    return exam;
+  }
+
   async getById(id: string) {
     return examRepository.findById(id);
   }
@@ -23,7 +35,8 @@ export class ExamService {
     return examRepository.findBySubject(subjectId);
   }
 
-  async create(subjectId: string, input: CreateExamInput) {
+  async create(subjectId: string, input: CreateExamInput, admin: AdminAuthUser) {
+    await assertSubjectAccess(admin, subjectId);
     const subject = await subjectRepository.findById(subjectId);
     if (!subject) {
       throw new AppError("Subject not found", 404);

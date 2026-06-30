@@ -10,9 +10,13 @@ import { useState } from "react";
 
 interface SubjectsPanelProps {
   subjects: SubjectListItem[];
+  canManageSubjects?: boolean;
 }
 
-export function SubjectsPanel({ subjects }: SubjectsPanelProps) {
+export function SubjectsPanel({
+  subjects,
+  canManageSubjects = true,
+}: SubjectsPanelProps) {
   const router = useRouter();
   const [showCreate, setShowCreate] = useState(false);
 
@@ -21,9 +25,11 @@ export function SubjectsPanel({ subjects }: SubjectsPanelProps) {
   return (
     <>
       <div className="mb-4.5 flex gap-2.5">
-        <Button variant="primary" onClick={() => setShowCreate(true)}>
-          <Plus size={16} /> New Subject
-        </Button>
+        {canManageSubjects ? (
+          <Button variant="primary" onClick={() => setShowCreate(true)}>
+            <Plus size={16} /> New Subject
+          </Button>
+        ) : null}
       </div>
 
       {subjects.length === 0 ? (
@@ -35,11 +41,15 @@ export function SubjectsPanel({ subjects }: SubjectsPanelProps) {
             No subjects yet
           </p>
           <p className="mb-4 max-w-sm text-sm text-exam-muted">
-            Create your first subject to start building exams and sessions.
+            {canManageSubjects
+              ? "Create your first subject to start building exams and sessions."
+              : "No subjects have been assigned to your account yet."}
           </p>
-          <Button variant="primary" onClick={() => setShowCreate(true)}>
-            <Plus size={16} /> Add Subject
-          </Button>
+          {canManageSubjects ? (
+            <Button variant="primary" onClick={() => setShowCreate(true)}>
+              <Plus size={16} /> Add Subject
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">

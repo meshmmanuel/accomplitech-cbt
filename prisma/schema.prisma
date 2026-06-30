@@ -73,8 +73,10 @@ model User {
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  institution  Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  auditLogs    AuditLog[]
+  institution     Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  auditLogs       AuditLog[]
+  gradedAttempts  ExamAttempt[] @relation("GradedAttempts")
+  subjectAssignments UserSubject[]
 }
 
 model Subject {
@@ -89,6 +91,7 @@ model Subject {
   updatedAt     DateTime @updatedAt
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   exams         Exam[]
+  assignedUsers UserSubject[]
 
   @@unique([institutionId, code])
 }
@@ -190,9 +193,13 @@ model ExamAttempt {
   submittedAt     DateTime?
   timeSpentSeconds Int?
   score           Float?
+  theoryScore     Float?
+  gradedAt        DateTime?
+  gradedById      String?
   status          AttemptStatus @default(IN_PROGRESS)
   session         ExamSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   exam            Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  gradedBy        User?         @relation("GradedAttempts", fields: [gradedById], references: [id], onDelete: SetNull)
   answers         ExamAnswer[]
 
   @@unique([sessionId, examId, admissionNumber])
@@ -204,6 +211,7 @@ model ExamAnswer {
   attemptId        String
   questionId       String
   selectedOption   String?
+  marksAwarded     Int?
   flaggedForReview Boolean     @default(false)
   answeredAt       DateTime?
   attempt          ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
@@ -255,4 +263,17 @@ model ClientConnectionEvent {
   client          ExamClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId, createdAt])
+}
+
+model UserSubject {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([userId])
+  @@index([subjectId])
 }

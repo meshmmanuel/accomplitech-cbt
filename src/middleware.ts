@@ -92,7 +92,8 @@ export async function middleware(request: NextRequest) {
     ADMIN_API_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
     isAdminSessionsApi(pathname) ||
     pathname.startsWith("/api/monitor") ||
-    pathname.startsWith("/api/overview")
+    pathname.startsWith("/api/overview") ||
+    pathname.startsWith("/api/users")
   ) {
     const adminToken = request.cookies.get(AUTH_COOKIE.adminAccess)?.value;
     if (!(await verifyAdminToken(adminToken))) {
@@ -123,6 +124,7 @@ export const config = {
     "/api/exams/:path*",
     "/api/monitor/:path*",
     "/api/overview/:path*",
+    "/api/users/:path*",
     "/api/assets/:path*",
     "/session/:path*",
     "/exam/:path*",

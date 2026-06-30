@@ -1,14 +1,15 @@
-import { ResultsPanel } from "@/components/admin/results-panel";
 import { getAdminSessionOrRedirect } from "@/lib/auth-server";
 import { resultsService } from "@/services/results.service";
+import { ResultsPanel } from "@/components/admin/results-panel";
+import { canGradeTheory } from "@/lib/admin-roles";
 import { AlertCircle } from "lucide-react";
 
 export default async function AdminResultsPage() {
-  await getAdminSessionOrRedirect();
+  const admin = await getAdminSessionOrRedirect();
 
   try {
-    const items = await resultsService.listForDefaultInstitution();
-    return <ResultsPanel items={items} />;
+    const items = await resultsService.listForAdmin(admin);
+    return <ResultsPanel items={items} canGrade={canGradeTheory(admin.role)} />;
   } catch (error) {
     console.error("Admin results page failed:", error);
     return (

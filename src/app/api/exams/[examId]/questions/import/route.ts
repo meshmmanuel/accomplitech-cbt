@@ -1,5 +1,5 @@
 import { ok, fail } from "@/lib/api-response";
-import { requireAdminSession } from "@/lib/auth-server";
+import { requireExamAdminAccess } from "@/lib/exam-route-auth";
 import { isAppError } from "@/lib/errors";
 import { importModeSchema } from "@/modules/questions";
 import { examRepository } from "@/repositories/exam.repository";
@@ -9,8 +9,8 @@ type RouteContext = { params: Promise<{ examId: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    await requireAdminSession();
     const { examId } = await context.params;
+    await requireExamAdminAccess(examId);
     const formData = await request.formData();
     const file = formData.get("file");
     const mode = importModeSchema.parse(formData.get("mode") ?? "append");
