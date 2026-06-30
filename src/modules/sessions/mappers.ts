@@ -1,6 +1,7 @@
 import type { Exam, ExamSession, ExamType, SessionStatus, Subject } from "@prisma/client";
 import type { ExamTypeCode } from "@/types";
 import { examTypeToCode } from "@/modules/subjects/mappers";
+import { countReleasedSessionExams } from "./release";
 import type {
   ExamPickerItem,
   SessionExamSummary,
@@ -10,6 +11,8 @@ import type {
 
 type SessionWithRelations = ExamSession & {
   sessionExams: Array<{
+    isReleased: boolean;
+    releasedAt: Date | null;
     exam: Exam & { subject: Subject };
   }>;
   _count: { attempts: number };
@@ -53,18 +56,25 @@ export function toDateInputValue(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function toSessionExamSummary(exam: Exam & { subject: Subject }): SessionExamSummary {
+function toSessionExamSummary(
+  sessionExam: SessionWithRelations["sessionExams"][number],
+): SessionExamSummary {
+  const { exam } = sessionExam;
   return {
     id: exam.id,
     name: exam.name,
     subjectCode: exam.subject.code,
     durationMinutes: exam.durationMinutes,
     type: examTypeToCode(exam.type),
+    isReleased: sessionExam.isReleased,
+    releasedAt: sessionExam.releasedAt?.toISOString() ?? null,
   };
 }
 
 export function toSessionListItem(session: SessionWithRelations): SessionListItem {
-  const exams = session.sessionExams.map(({ exam }) => toSessionExamSummary(exam));
+  const exams = session.sessionExams.map((sessionExam) =>
+    toSessionExamSummary(sessionExam),
+  );
 
   return {
     id: session.id,
@@ -78,6 +88,7 @@ export function toSessionListItem(session: SessionWithRelations): SessionListIte
     status: sessionStatusToCode(session.status),
     type: deriveSessionType(exams),
     attemptCount: session._count.attempts,
+    releasedExamCount: countReleasedSessionExams(session.sessionExams),
     exams,
   };
 }

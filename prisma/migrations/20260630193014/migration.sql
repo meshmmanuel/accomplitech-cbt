@@ -19,7 +19,7 @@ CREATE TABLE "new_ExamAttempt" (
     CONSTRAINT "ExamAttempt_examId_fkey" FOREIGN KEY ("examId") REFERENCES "Exam" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "ExamAttempt_gradedById_fkey" FOREIGN KEY ("gradedById") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
-INSERT INTO "new_ExamAttempt" ("admissionNumber", "displayName", "examId", "gradedAt", "gradedById", "id", "score", "sessionId", "startedAt", "status", "submittedAt", "theoryScore", "timeSpentSeconds") SELECT "admissionNumber", "displayName", "examId", "gradedAt", "gradedById", "id", "score", "sessionId", "startedAt", "status", "submittedAt", "theoryScore", "timeSpentSeconds" FROM "ExamAttempt";
+INSERT INTO "new_ExamAttempt" ("admissionNumber", "displayName", "examId", "gradedAt", "gradedById", "id", "score", "sessionId", "startedAt", "status", "submittedAt", "theoryScore", "timeSpentSeconds") SELECT "admissionNumber", "displayName", "examId", NULL, NULL, "id", "score", "sessionId", "startedAt", "status", "submittedAt", NULL, "timeSpentSeconds" FROM "ExamAttempt";
 DROP TABLE "ExamAttempt";
 ALTER TABLE "new_ExamAttempt" RENAME TO "ExamAttempt";
 CREATE INDEX "ExamAttempt_admissionNumber_idx" ON "ExamAttempt"("admissionNumber");

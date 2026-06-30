@@ -9,11 +9,13 @@ import { useState } from "react";
 interface SessionBeginButtonProps {
   sessionId: string;
   examCount: number;
+  disabled?: boolean;
 }
 
 export function SessionBeginButton({
   sessionId,
   examCount,
+  disabled = false,
 }: SessionBeginButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export function SessionBeginButton({
       <Button
         variant="navy"
         className="w-full justify-center"
-        disabled={loading}
+        disabled={loading || disabled || examCount === 0}
         onClick={begin}
       >
         {loading ? "Starting..." : examCount === 1 ? "Begin Exam" : "Begin Session"}

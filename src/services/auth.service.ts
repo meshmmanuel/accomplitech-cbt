@@ -87,7 +87,9 @@ export class AuthService {
         status: session.status,
         instructions: session.instructions,
         durationMinutes: session.durationMinutes,
-        exams: session.sessionExams.map(({ exam }) => ({
+        exams: session.sessionExams
+          .filter((link) => link.isReleased)
+          .map(({ exam }) => ({
           id: exam.id,
           name: exam.name,
           type: exam.type,

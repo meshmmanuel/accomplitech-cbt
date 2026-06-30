@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SessionExamReleaseToggle } from "@/components/admin/session-exam-release-toggle";
 import type { SessionListItem } from "@/modules/sessions";
 import { Clock, Edit, Hash, Trash2, Users } from "lucide-react";
 import { SectionHead } from "@/components/ui/section-head";
@@ -8,9 +9,15 @@ interface SessionCardProps {
   session: SessionListItem;
   onEdit: (session: SessionListItem) => void;
   onDelete: (session: SessionListItem) => void;
+  onSessionUpdated: (session: SessionListItem) => void;
 }
 
-export function SessionCard({ session, onEdit, onDelete }: SessionCardProps) {
+export function SessionCard({
+  session,
+  onEdit,
+  onDelete,
+  onSessionUpdated,
+}: SessionCardProps) {
   return (
     <div className="rounded-[13px] border border-exam-border bg-exam-white p-5">
       <div className="mb-3.5 flex items-start justify-between gap-3">
@@ -21,6 +28,9 @@ export function SessionCard({ session, onEdit, onDelete }: SessionCardProps) {
             </span>
             <Badge status={session.status} />
             <Badge status={session.type} />
+            <span className="text-[11px] font-semibold text-exam-muted">
+              {session.releasedExamCount}/{session.exams.length} released
+            </span>
           </div>
           <div className="flex flex-wrap gap-3.5 text-xs text-exam-muted">
             <span className="flex items-center gap-1">
@@ -52,16 +62,27 @@ export function SessionCard({ session, onEdit, onDelete }: SessionCardProps) {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg bg-surface p-3">
           <SectionHead>Exams in this session</SectionHead>
+          <p className="mb-3 text-[11px] leading-relaxed text-exam-muted">
+            Release each paper when students should see it. Unreleased exams stay
+            hidden until you release them.
+          </p>
           {session.exams.length > 0 ? (
             session.exams.map((exam) => (
               <div
                 key={exam.id}
-                className="flex items-center justify-between border-b border-exam-border py-1 text-xs last:border-0"
+                className="flex items-center justify-between gap-3 border-b border-exam-border py-2 text-xs last:border-0"
               >
-                <span className="font-semibold text-navy">{exam.subjectCode}</span>
-                <span className="text-exam-muted">
-                  {exam.name} · {exam.durationMinutes}min
-                </span>
+                <div className="min-w-0">
+                  <div className="font-semibold text-navy">{exam.subjectCode}</div>
+                  <div className="truncate text-exam-muted">
+                    {exam.name} · {exam.durationMinutes}min
+                  </div>
+                </div>
+                <SessionExamReleaseToggle
+                  sessionId={session.id}
+                  exam={exam}
+                  onUpdated={onSessionUpdated}
+                />
               </div>
             ))
           ) : (

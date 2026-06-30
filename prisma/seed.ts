@@ -356,6 +356,7 @@ async function main() {
       examCode: "FS2025",
       status: "upcoming" as const,
       examIds: [SEED_IDS.exams.cs101MidTerm, SEED_IDS.exams.mth301Calculus],
+      releasedExamIds: [SEED_IDS.exams.cs101MidTerm],
     },
     {
       id: SEED_IDS.sessions.midTerm,
@@ -368,6 +369,7 @@ async function main() {
       examCode: SEED_CREDENTIALS.demoExamCode,
       status: "active" as const,
       examIds: [SEED_IDS.exams.cs101MidTerm],
+      releasedExamIds: [SEED_IDS.exams.cs101MidTerm],
     },
     {
       id: SEED_IDS.sessions.englishProficiency,
@@ -380,10 +382,12 @@ async function main() {
       examCode: "ENG2025",
       status: "completed" as const,
       examIds: [SEED_IDS.exams.eng201Proficiency],
+      releasedExamIds: [SEED_IDS.exams.eng201Proficiency],
     },
   ];
 
   for (const session of sessions) {
+    const releasedExamIds = new Set<string>(session.releasedExamIds);
     await prisma.examSession.create({
       data: {
         id: session.id,
@@ -396,7 +400,11 @@ async function main() {
         examCode: session.examCode,
         status: mapSessionStatus(session.status),
         sessionExams: {
-          create: session.examIds.map((examId) => ({ examId })),
+          create: session.examIds.map((examId) => ({
+            examId,
+            isReleased: releasedExamIds.has(examId),
+            releasedAt: releasedExamIds.has(examId) ? new Date() : null,
+          })),
         },
       },
     });

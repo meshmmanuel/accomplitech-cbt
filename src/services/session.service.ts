@@ -101,7 +101,10 @@ export class SessionService {
       examCode: input.examCode,
       status: sessionStatusCodeToDb(input.status ?? "draft"),
       sessionExams: {
-        create: input.examIds.map((examId) => ({ examId })),
+        create: input.examIds.map((examId) => ({
+          examId,
+          isReleased: false,
+        })),
       },
     });
 
@@ -173,6 +176,27 @@ export class SessionService {
     }
 
     await sessionRepository.delete(id);
+  }
+
+  async setExamRelease(sessionId: string, examId: string, isReleased: boolean) {
+    const session = await sessionRepository.findById(sessionId);
+    if (!session) {
+      throw new AppError("Session not found", 404);
+    }
+
+    const linked = session.sessionExams.some((link) => link.examId === examId);
+    if (!linked) {
+      throw new AppError("Exam is not part of this session", 400);
+    }
+
+    await sessionRepository.setExamRelease(sessionId, examId, isReleased);
+
+    const updated = await sessionRepository.findById(sessionId);
+    if (!updated) {
+      throw new AppError("Session not found", 404);
+    }
+
+    return toSessionListItem(updated);
   }
 }
 

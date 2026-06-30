@@ -12,6 +12,7 @@ import {
 } from "@/modules/questions";
 import { canonicalOptionsToLegacyStrings } from "@/modules/questions/blocks";
 import { examTypeToCode } from "@/modules/subjects/mappers";
+import { filterVisibleSessionExams } from "@/modules/sessions";
 import { attemptRepository } from "@/repositories/attempt.repository";
 import { sessionParticipationRepository } from "@/repositories/session-participation.repository";
 import { sessionRepository } from "@/repositories/session.repository";
@@ -55,6 +56,11 @@ export class StudentSessionService {
 
   async beginSession(sessionId: string, admissionNumber: string) {
     const session = await this.getOpenSessionOrThrow(sessionId);
+
+    const hasReleasedExam = session.sessionExams.some((link) => link.isReleased);
+    if (!hasReleasedExam) {
+      throw new AppError("No exams have been released for this session yet", 403);
+    }
 
     let participation =
       await sessionParticipationRepository.findBySessionAndAdmission(
@@ -113,8 +119,13 @@ export class StudentSessionService {
       admissionNumber,
     );
     const attemptByExamId = new Map(attempts.map((a) => [a.examId, a]));
+    const attemptedExamIds = new Set(attempts.map((attempt) => attempt.examId));
+    const visibleSessionExams = filterVisibleSessionExams(
+      session.sessionExams,
+      attemptedExamIds,
+    );
 
-    const exams = session.sessionExams.map(({ exam }) => {
+    const exams = visibleSessionExams.map(({ exam }) => {
       const attempt = attemptByExamId.get(exam.id);
       let attemptStatus: SessionHubState["exams"][0]["attemptStatus"] =
         "not_started";
@@ -189,9 +200,19 @@ export class StudentSessionService {
     admissionNumber: string,
   ) {
     const session = await this.getOpenSessionOrThrow(sessionId);
-    const linked = session.sessionExams.some(({ examId: id }) => id === examId);
-    if (!linked) {
+    const sessionExam = session.sessionExams.find((link) => link.examId === examId);
+    if (!sessionExam) {
       throw new AppError("Exam is not part of this session", 400);
+    }
+
+    const existingAttempt = await attemptRepository.findForStudentExam(
+      sessionId,
+      examId,
+      admissionNumber,
+    );
+
+    if (!sessionExam.isReleased && !existingAttempt) {
+      throw new AppError("This exam has not been released yet", 403);
     }
 
     const participation =
@@ -294,13 +315,25 @@ export class StudentSessionService {
       };
     }
 
+    const sessionAttempts = await attemptRepository.findBySessionAndAdmission(
+      sessionId,
+      admissionNumber,
+    );
+    const attemptedExamIds = new Set(
+      sessionAttempts.map((sessionAttempt) => sessionAttempt.examId),
+    );
+    const visibleExamCount = filterVisibleSessionExams(
+      session.sessionExams,
+      attemptedExamIds,
+    ).length;
+
     return {
       attemptId: attempt.id,
       examId: attempt.examId,
       sessionId: attempt.sessionId,
       examName: attempt.exam.name,
       subjectCode: attempt.exam.subject.code,
-      examCount: session.sessionExams.length,
+      examCount: visibleExamCount,
       status: attempt.status,
       score: attempt.score,
       timeRemainingSeconds: Math.max(0, timeRemainingSeconds),

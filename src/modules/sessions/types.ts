@@ -8,6 +8,8 @@ export interface SessionExamSummary {
   subjectCode: string;
   durationMinutes: number;
   type: ExamTypeCode;
+  isReleased: boolean;
+  releasedAt: string | null;
 }
 
 export interface SessionListItem {
@@ -22,6 +24,7 @@ export interface SessionListItem {
   status: SessionStatusCode;
   type: ExamTypeCode;
   attemptCount: number;
+  releasedExamCount: number;
   exams: SessionExamSummary[];
 }
 

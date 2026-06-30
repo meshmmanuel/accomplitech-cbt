@@ -49,3 +49,9 @@ export const updateSessionSchema = createSessionSchema.partial().refine(
 
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;
+
+export const releaseSessionExamSchema = z.object({
+  isReleased: z.boolean(),
+});
+
+export type ReleaseSessionExamInput = z.infer<typeof releaseSessionExamSchema>;

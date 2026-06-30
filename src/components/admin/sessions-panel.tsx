@@ -8,7 +8,7 @@ import { apiDelete } from "@/lib/api-client";
 import type { ExamPickerItem, SessionListItem } from "@/modules/sessions";
 import { AlertCircle, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface SessionsPanelProps {
   sessions: SessionListItem[];
@@ -17,6 +17,7 @@ interface SessionsPanelProps {
 
 export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
   const router = useRouter();
+  const [sessionItems, setSessionItems] = useState(sessions);
   const [showCreate, setShowCreate] = useState(false);
   const [editingSession, setEditingSession] = useState<SessionListItem | null>(
     null,
@@ -26,7 +27,20 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  useEffect(() => {
+    setSessionItems(sessions);
+  }, [sessions]);
+
   const refresh = () => router.refresh();
+
+  const handleSessionUpdated = (updated: SessionListItem) => {
+    setSessionItems((current) =>
+      current.map((session) => (session.id === updated.id ? updated : session)),
+    );
+    if (editingSession?.id === updated.id) {
+      setEditingSession(updated);
+    }
+  };
 
   const confirmDelete = async () => {
     if (!deletingSession) return;
@@ -46,6 +60,9 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
     }
 
     setDeletingSession(null);
+    setSessionItems((current) =>
+      current.filter((session) => session.id !== deletingSession.id),
+    );
     refresh();
   };
 
@@ -63,7 +80,7 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
         </Button>
       </div>
 
-      {sessions.length === 0 ? (
+      {sessionItems.length === 0 ? (
         <div className="flex min-h-60 flex-col items-center justify-center rounded-[13px] border border-dashed border-exam-border bg-exam-white p-8 text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-surface">
             <Plus size={22} className="text-exam-muted" />
@@ -72,7 +89,8 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
             No sessions yet
           </p>
           <p className="mb-4 max-w-sm text-sm text-exam-muted">
-            Create a session, link exams, and share the exam code with students.
+            Create a session, link exams, and release each paper when its slot
+            starts.
           </p>
           <Button
             variant="primary"
@@ -89,7 +107,7 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {sessions.map((session) => (
+          {sessionItems.map((session) => (
             <SessionCard
               key={session.id}
               session={session}
@@ -98,6 +116,7 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
                 setEditingSession(session);
               }}
               onDelete={setDeletingSession}
+              onSessionUpdated={handleSessionUpdated}
             />
           ))}
         </div>
@@ -111,9 +130,16 @@ export function SessionsPanel({ sessions, exams }: SessionsPanelProps) {
             setShowCreate(false);
             setEditingSession(null);
           }}
-          onSuccess={() => {
+          onSuccess={(session) => {
             setShowCreate(false);
             setEditingSession(null);
+            if (sessionItems.some((item) => item.id === session.id)) {
+              setSessionItems((current) =>
+                current.map((item) => (item.id === session.id ? session : item)),
+              );
+            } else {
+              setSessionItems((current) => [session, ...current]);
+            }
             refresh();
           }}
         />

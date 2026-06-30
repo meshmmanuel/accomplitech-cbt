@@ -24,6 +24,9 @@ export default async function SessionInstructionsPage({
     redirect("/student/login");
   }
 
+  const releasedExams = session.sessionExams.filter((link) => link.isReleased);
+  const canBegin = releasedExams.length > 0;
+
   return (
     <div className="min-h-screen bg-surface">
       <header className="flex items-center justify-between bg-navy px-6 py-3.5">
@@ -53,30 +56,39 @@ export default async function SessionInstructionsPage({
 
         <div className="mb-8 rounded-xl border border-exam-border bg-exam-white p-5">
           <h2 className="m-0 mb-3 text-sm font-bold text-exam-text">
-            Exams in this session
+            Available exams
           </h2>
-          <p className="mb-3 text-xs text-exam-muted">
-            You have {session.durationMinutes} minutes total for{" "}
-            {session.sessionExams.length === 1
-              ? "this exam"
-              : `all ${session.sessionExams.length} exams`}
-            . The timer starts when you begin.
-          </p>
-          <ul className="m-0 space-y-2 p-0">
-            {session.sessionExams.map(({ exam }) => (
-              <li
-                key={exam.id}
-                className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-sm"
-              >
-                <span>
-                  <span className="font-bold text-navy">{exam.subject.code}</span>
-                  {" · "}
-                  {exam.name}
-                </span>
-                <span className="text-exam-muted">{exam.questions.length} Q</span>
-              </li>
-            ))}
-          </ul>
+          {canBegin ? (
+            <>
+              <p className="mb-3 text-xs text-exam-muted">
+                You have {session.durationMinutes} minutes total for{" "}
+                {releasedExams.length === 1
+                  ? "this exam"
+                  : `these ${releasedExams.length} exams`}
+                . The timer starts when you begin.
+              </p>
+              <ul className="m-0 space-y-2 p-0">
+                {releasedExams.map(({ exam }) => (
+                  <li
+                    key={exam.id}
+                    className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-sm"
+                  >
+                    <span>
+                      <span className="font-bold text-navy">{exam.subject.code}</span>
+                      {" · "}
+                      {exam.name}
+                    </span>
+                    <span className="text-exam-muted">{exam.questions.length} Q</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="m-0 text-sm text-exam-muted">
+              No exams have been released for this session yet. Please wait for
+              your invigilator to release your paper.
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3">
@@ -88,7 +100,8 @@ export default async function SessionInstructionsPage({
           <div className="flex-1">
             <SessionBeginButton
               sessionId={sessionId}
-              examCount={session.sessionExams.length}
+              examCount={releasedExams.length}
+              disabled={!canBegin}
             />
           </div>
         </div>

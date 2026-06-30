@@ -89,9 +89,25 @@ export class SessionRepository {
       await tx.examSessionExam.deleteMany({ where: { sessionId } });
       if (examIds.length > 0) {
         await tx.examSessionExam.createMany({
-          data: examIds.map((examId) => ({ sessionId, examId })),
+          data: examIds.map((examId) => ({
+            sessionId,
+            examId,
+            isReleased: false,
+          })),
         });
       }
+    });
+  }
+
+  setExamRelease(sessionId: string, examId: string, isReleased: boolean) {
+    return db.examSessionExam.update({
+      where: {
+        sessionId_examId: { sessionId, examId },
+      },
+      data: {
+        isReleased,
+        releasedAt: isReleased ? new Date() : null,
+      },
     });
   }
 
