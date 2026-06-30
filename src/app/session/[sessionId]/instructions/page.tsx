@@ -1,8 +1,9 @@
 import { SessionBeginButton } from "@/components/student/session-begin-button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { getStudentSessionOrRedirect } from "@/lib/auth-server";
 import { sessionService } from "@/services/session.service";
-import { ClipboardList, Monitor } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -26,12 +27,7 @@ export default async function SessionInstructionsPage({
   return (
     <div className="min-h-screen bg-surface">
       <header className="flex items-center justify-between bg-navy px-6 py-3.5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold">
-            <Monitor size={16} className="text-navy-dark" />
-          </div>
-          <span className="text-sm font-bold text-exam-white">ExamLink CBT</span>
-        </div>
+        <BrandLogo size="sm" showName onDark />
         <span className="text-xs text-[#8899CC]">
           {student.admissionNumber}
         </span>

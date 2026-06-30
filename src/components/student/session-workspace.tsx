@@ -1,6 +1,7 @@
 "use client";
 
 import { QuestionMeta } from "@/components/student/exam-header";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { ObjectiveQuestion } from "@/components/student/objective-question";
 import { QuestionNavigator } from "@/components/student/question-navigator";
 import { SessionSubmitAllModal } from "@/components/student/session-submit-all-modal";
@@ -29,7 +30,6 @@ import {
   ChevronRight,
   ChevronUp,
   Clock,
-  Monitor,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -627,9 +627,7 @@ export function SessionWorkspace({ sessionId }: SessionWorkspaceProps) {
     <div className="flex h-screen flex-col bg-surface">
       <header className="shrink-0 bg-navy shadow-md">
         <div className="flex items-center gap-3 px-4 py-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gold">
-            <Monitor size={15} className="text-navy-dark" />
-          </div>
+          <BrandLogo size="sm" />
 
           <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-x-auto">
             {isSingleExam ? (

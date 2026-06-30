@@ -1,5 +1,7 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { PoweredBy } from "@/components/brand/powered-by";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiPost } from "@/lib/api-client";
@@ -7,7 +9,7 @@ import type { AdminAuthUser } from "@/modules/auth/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { AlertCircle, ChevronLeft, Shield } from "lucide-react";
+import { AlertCircle, ChevronLeft } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -38,11 +40,11 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-surface p-6">
       <div className="w-full max-w-[380px]">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-navy">
-            <Shield size={28} className="text-gold" />
+          <div className="mx-auto mb-4 flex justify-center">
+            <BrandLogo size="md" />
           </div>
           <h2 className="m-0 mb-1.5 text-2xl font-extrabold text-exam-text">
             Admin Access
@@ -96,6 +98,8 @@ export default function AdminLoginPage() {
         >
           <ChevronLeft size={14} /> Back to home
         </Link>
+
+        <PoweredBy className="mt-8" />
       </div>
     </div>
   );

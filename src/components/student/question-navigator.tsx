@@ -1,11 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { SectionHead } from "@/components/ui/section-head";
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/utils";
-import { Clock, Monitor } from "lucide-react";
+import { Clock } from "lucide-react";
 
 export interface NavigatorQuestion {
   id: string;
@@ -153,13 +154,8 @@ export function SessionHubPanel({
     <div className="min-h-screen bg-surface">
       <header className="flex items-center justify-between bg-navy px-6 py-3.5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold">
-            <Monitor size={16} className="text-navy-dark" />
-          </div>
-          <div>
-            <span className="text-sm font-bold text-exam-white">{sessionName}</span>
-            <p className="m-0 text-[11px] text-[#8899CC]">Session timer is running</p>
-          </div>
+          <BrandLogo size="sm" showName onDark />
+          <p className="m-0 text-[11px] text-[#8899CC]">{sessionName}</p>
         </div>
         <div className="flex items-center gap-3">
           <SessionTimerBar timeRemainingSeconds={timeRemainingSeconds} />

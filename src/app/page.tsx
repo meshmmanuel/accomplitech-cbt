@@ -1,8 +1,11 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { PoweredBy } from "@/components/brand/powered-by";
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { useState } from "react";
-import { BookOpen, ChevronRight, Monitor, Shield } from "lucide-react";
+import { BookOpen, ChevronRight, Shield } from "lucide-react";
 
 export default function LandingPage() {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -43,15 +46,13 @@ export default function LandingPage() {
       ))}
 
       <div className="z-10 mb-13 text-center">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[20px] bg-gold shadow-[0_12px_40px_rgba(240,165,0,0.35)]">
-          <Monitor size={40} className="text-navy-dark" />
+        <div className="mx-auto mb-5 flex justify-center">
+          <BrandLogo size="lg" />
         </div>
         <h1 className="m-0 text-4xl font-black tracking-tight text-exam-white">
-          ExamLink <span className="text-gold">CBT</span>
+          {BRAND.productShort} <span className="text-gold">CBT</span>
         </h1>
-        <p className="mt-2.5 text-[15px] text-[#7B90C4]">
-          Computer-Based Testing Platform
-        </p>
+        <p className="mt-2.5 text-[15px] text-[#7B90C4]">{BRAND.tagline}</p>
       </div>
 
       <div className="z-10 flex flex-wrap justify-center gap-5">
@@ -91,15 +92,8 @@ export default function LandingPage() {
         })}
       </div>
 
-      <div className="absolute bottom-5 z-10 flex items-center gap-4 text-xs text-[#3D5490]">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-exam-green" />
-          Network Online
-        </span>
-        <span>·</span>
-        <span>Server: 192.168.1.1</span>
-        <span>·</span>
-        <span>v2.4.1</span>
+      <div className="absolute bottom-5 z-10">
+        <PoweredBy onDark />
       </div>
     </div>
   );

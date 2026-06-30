@@ -1,5 +1,7 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -9,7 +11,6 @@ import {
   BookMarked,
   Layers,
   LogOut,
-  Monitor,
   Settings,
   TrendingUp,
 } from "lucide-react";
@@ -74,11 +75,11 @@ export function AdminSidebar() {
   return (
     <aside className="flex w-[220px] shrink-0 flex-col bg-navy-dark">
       <div className="flex items-center gap-2.5 border-b border-white/7 px-3.5 py-4.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold">
-          <Monitor size={16} className="text-navy-dark" />
-        </div>
+        <BrandLogo size="sm" />
         <div>
-          <div className="text-[13px] font-bold text-exam-white">ExamLink</div>
+          <div className="text-[13px] font-bold text-exam-white">
+            {BRAND.productShort}
+          </div>
           <div className="mt-0.5 text-[10px] text-[#4455AA]">Admin Console</div>
         </div>
       </div>

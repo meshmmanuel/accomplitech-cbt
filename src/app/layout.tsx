@@ -1,4 +1,5 @@
 import { ClientConnectionRoot } from "@/components/student/client-connection-root";
+import { BRAND } from "@/lib/brand";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -9,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ExamLink CBT",
-  description: "Computer-Based Testing Platform",
+  title: BRAND.productName,
+  description: `${BRAND.tagline} — built by ${BRAND.companyName}`,
 };
 
 export default function RootLayout({

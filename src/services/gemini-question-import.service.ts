@@ -10,7 +10,7 @@ import type { CanonicalQuestion } from "@/modules/questions/types";
 import { canonicalQuestionSchema } from "@/modules/questions/schemas";
 import type { ExtractedDocxContent } from "@/modules/questions/docx-adapter";
 
-const SYSTEM_PROMPT = `You are an exam question extraction engine for ExamLink CBT.
+const SYSTEM_PROMPT = `You are an exam question extraction engine for AccompliTech CBT.
 Convert the supplied Word document into canonical JSON questions.
 
 Output ONLY valid JSON: { "questions": [ ... ] }

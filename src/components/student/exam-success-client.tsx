@@ -1,5 +1,6 @@
 "use client";
 
+import { PoweredBy } from "@/components/brand/powered-by";
 import { Button } from "@/components/ui/button";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { clearStudentClientContext } from "@/lib/client-storage";
@@ -195,6 +196,8 @@ export function ExamSuccessClient() {
         >
           {leaving ? "Signing out..." : "Back to Exam Portal"}
         </Button>
+
+        <PoweredBy className="mt-8" />
       </div>
     </div>
   );

@@ -29,7 +29,7 @@ function mapSessionStatus(
 }
 
 async function main() {
-  console.log("Seeding ExamLink CBT database...");
+  console.log("Seeding AccompliTech CBT database...");
 
   await prisma.examAnswer.deleteMany();
   await prisma.examAttempt.deleteMany();
@@ -45,7 +45,7 @@ async function main() {
   const institution = await prisma.institution.create({
     data: {
       id: SEED_IDS.institution,
-      name: "ExamLink Demo Institution",
+      name: "Demo Institution",
     },
   });
 
