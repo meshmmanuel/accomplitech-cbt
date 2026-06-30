@@ -36,9 +36,21 @@ export function getServerUrl(): string {
   if (!canUseStorage()) return "";
 
   const stored = localStorage.getItem(CLIENT_STORAGE_KEYS.serverUrl);
-  if (stored) return stored.replace(/\/$/, "");
+  if (stored && isStudentClientRoute()) {
+    return stored.replace(/\/$/, "");
+  }
 
   return window.location.origin;
+}
+
+function isStudentClientRoute() {
+  if (!canUseStorage()) return false;
+  const path = window.location.pathname;
+  return (
+    path.startsWith("/student") ||
+    path.startsWith("/session") ||
+    path.startsWith("/exam")
+  );
 }
 
 export function setServerUrl(url: string) {

@@ -26,6 +26,13 @@ export function buildServerBaseUrl(request?: Request): string {
     return configured.replace(/\/$/, "");
   }
 
+  if (request) {
+    const url = new URL(request.url);
+    if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+      return `${url.protocol}//${url.host}`;
+    }
+  }
+
   const port = resolveServerPort();
   const lanIp = getLanIpAddress();
   if (lanIp) {
